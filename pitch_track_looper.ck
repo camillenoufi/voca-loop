@@ -6,7 +6,7 @@
 //   date: Nov 2018
 //--
 
-// See "Execution (Main)" for start of code
+// See "Execution (Main)" section for start of run-time code
 // SETUP modifies pitch tracking and quantization variables
 // HELPER FUNCTIONS do the work
  
@@ -93,8 +93,8 @@ fun void execute(int type)
     computeMostLikelyKeyNum();
     
     // play back results in a loop
-    spork ~ playbackLoopGo(type);
-    1::hour => now;
+    playbackLoopGo(type);
+    //1::hour => now;
 }
 
 
@@ -283,19 +283,20 @@ fun void computeMostLikelyKeyNum()
 
 fun void playbackLoopGo(int type) 
 {
+    int thisMidiArr[divsPerMeasure]; // to hold midi note keynums
+    for (0 => int i; i<midiArr.size(); i++) 
+        midiArr[i] => thisMidiArr[i];    
     while (true)
-    {
-        playSynthesizedMeasure(type);
-    }
+        playSynthesizedMeasure(type, thisMidiArr);
 }
 
-fun void playSynthesizedMeasure(int type)
+fun void playSynthesizedMeasure(int type, int midiArr[])
 {
     
     if (type==1) {
         TriOsc t => JCRev r => dac;
-        .05 => r.mix;        
-        0.6 => t.gain;
+        .1 => r.mix;        
+        0.8 => t.gain;
         for (0 => int i; i<midiArr.size(); i++)
         {
             Std.mtof(midiArr[i]) => t.freq;
@@ -317,9 +318,9 @@ fun void playSynthesizedMeasure(int type)
         0.0 => s.gain;     
     }
     else {
-        SqrOsc w => JCRev r => dac;
-        .05 => r.mix;        
-        0.6 => w.gain;
+        SawOsc w => JCRev r => dac;
+        .1 => r.mix;        
+        0.3 => w.gain;
         for (0 => int i; i<midiArr.size(); i++)
         {
             Std.mtof(midiArr[i]) => w.freq;
