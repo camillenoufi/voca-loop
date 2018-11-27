@@ -13,7 +13,6 @@
 // analysis
 adc => PoleZero dcblock => BPF bpf => FFT fft =^ RMS rms => blackhole;
 IFFT ifft => blackhole;
-FFT fft2;
 // synthesis
 TriOsc s => JCRev r => dac;
 
@@ -35,8 +34,7 @@ bpf.set(fC,Q);
 1024 => int FFT_SIZE;
 0.5 => float HOP_SIZE;
 FFT_SIZE => fft.size;
-FFT_SIZE => fft2.size;
-Windowing.hamming( fft.size() ) => fft.window => fft2.window;
+Windowing.hamming( fft.size() ) => fft.window;
 // find sample rate
 second / samp => float srate;
 0 => int rmsCount;
@@ -54,9 +52,9 @@ second / samp => float srate;
 
 // sample and duration calculations
 (beatsPerMeasure*divsPerBeat) $ int => int divsPerMeasure;
-((secPerMin * srate)/(divsPerBeat * beatsPerMin)) => float samplesPerDiv; //samples per smallest note divdiv
-(secPerMin)/(beatsPerMin*divsPerBeat) => float divDur; //duration in seconds of smallest note divdiv
-Math.round(samplesPerDiv/(fft.size()*HOP_SIZE)) $ int => int numFramesPerDiv;
+(secPerMin * srate) / (divsPerBeat * beatsPerMin) => float samplesPerDiv; //samples per smallest note div
+Math.round( samplesPerDiv / (FFT_SIZE*HOP_SIZE) ) $ int => int numFramesPerDiv;
+secPerMin / (beatsPerMin * divsPerBeat) => float divDur; //duration in seconds of smallest note div
 
 //initialize storage arrays
 float freqArr[divsPerMeasure][numFramesPerDiv]; //to hold measure frequencies
@@ -66,11 +64,11 @@ for (0 => int i; i<freqArr.size(); i++)
 
 //to hold measure keynums for all FFT frames
 float keynumArr[divsPerMeasure][numFramesPerDiv];
-for (0 => int i; i<freqArr.size(); i++) 
-    for (0 => int j; j<freqArr[0].size(); j++)
-        0 => freqArr[i][j];
+for (0 => int i; i<keynumArr.size(); i++) 
+    for (0 => int j; j<keynumArr[0].size(); j++)
+        0 => keynumArr[i][j];
  
-float midiArr[divsPerMeasure]; // to hold midi note keynums
+int midiArr[divsPerMeasure]; // to hold midi note keynums
 for (0 => int i; i<midiArr.size(); i++) 
     0 => midiArr[i];
 
@@ -80,11 +78,7 @@ for (0 => int i; i<midiArr.size(); i++)
 // *********************************************************************************
 
 // 1 measure click-track countdown
-for (0 => int i; i<beatsPerMeasure; i++)
-{
-    <<< (i+1) >>>; 
-    (divsPerBeat*divDur)::second => now;
-}
+clickTrackCountdown();
 
 // "record" adc input for 1 measure
 recordADC_F0();
@@ -95,20 +89,36 @@ convertF02KeyNum_AllFrames();
 // get likely keynum results
 computeMostLikelyKeyNum();
 
+// play back results
+playSynthesizedMeasure();
+
 // *********************************************************************************
 // ************************** HELPER FUNCTIONS (ACTUAL PROCESSING) *****************
 // *********************************************************************************
 
+
+fun void clickTrackCountdown()
+{
+    0 => s.gain;
+    for (0 => int i; i<beatsPerMeasure; i++)
+    {
+        <<< (i+1) >>>; 
+        (divsPerBeat*divDur)::second => now;
+    }
+}
+
 fun void recordADC_F0() 
 {
+    // for all notes in measure
     0 => float tmpF0; 
     for (0=>int i; i<freqArr.size(); i++)
     {
+        //for all buffer frames in note
         for (0=>int j; j<freqArr[0].size(); j++)
         {
             extractF0() => tmpF0;
-            tmpF0 => freqArr[i][j]; tmpF0 => s.freq;
-            (fft.size()*HOP_SIZE)::samp => now;
+            tmpF0 => freqArr[i][j];
+            (FFT_SIZE*HOP_SIZE)::samp => now;
         }
         //print beat
         if(i%4==0) <<<i/4 + 1>>>;
@@ -121,12 +131,11 @@ fun float extractF0()
     // if signal is above noise floor, extract the freq
     if(flagAboveRMSThresh())
     {
-        //return getF0viaSpectrumMax(); 
-        return getF0viaCepstrum();  
+        return getF0viaSpectrumMax(); 
+        //return getF0viaCepstrum();  
     }
     else
         return 0.0;
-  
 }
 
 // ********************************** flagAboveRMSThresh() ******************************
@@ -140,13 +149,12 @@ fun int flagAboveRMSThresh() // adjust hardcoded values depending on space/mic s
     
     if(thisScaledRMS >= 0.1) 
     {
-        //<<<thisScaledRMS>>>;
-        rmsCount++;
-        //<<<rmsCount>>>;
         return 1;
     }
     else 
+    {
         return 0;
+    }
 }
 
 // ********************************** getF0viaCepstrum() *******************************
@@ -172,12 +180,11 @@ fun float getF0viaCepstrum()
     ifft.transform(logVals);
     ifft.samples(c);
     
-    
     //find peak of cepstrum
-    0 => float max; 0 => int quefrency;
-    for( 15 => int i; i < c.size(); i++ ) //ignore filter bins, keep source
+    0 => float max; 0 => float abs_c; 0 => int quefrency; 
+    for( 15 => int i; i < c.size(); i++ ) //start at 15 to ignore filter, keep source
     {
-        Math.fabs(c[i]) => float abs_c;
+        Math.fabs(c[i]) => abs_c;
         if( abs_c > max )
         {
             abs_c => max;
@@ -187,7 +194,7 @@ fun float getF0viaCepstrum()
     //<<< quefrency >>>;
     
     // convert to to frequency
-    (srate / (quefrency $ float) ) => float target_freq;
+    srate / quefrency$float  => float target_freq;
     return target_freq;
 }
 
@@ -209,9 +216,7 @@ fun float getF0viaSpectrumMax()
     }
     
     // set freq
-    (where $ float) / fft.size() * srate => float target_freq;
-    // set gain
-    (max / .8) => float target_gain;
+    where$float / fft.size() * srate => float target_freq;
     return target_freq;
 }
 
@@ -221,14 +226,14 @@ fun void convertF02KeyNum_AllFrames()
 {
     for (0 => int i; i<freqArr.size(); i++)
     {
-        for (0=>int j; j<freqArr[0].size(); j++)
+        for (0 => int j; j<freqArr[0].size(); j++)
         {
             freqArr[i][j] => float tmp;
             if (tmp>=fL)
                 Math.round(Std.ftom(tmp)) => keynumArr[i][j];
             else
                 0.0 => keynumArr[i][j];
-            //<<<keynumArr[i][j]>>>;
+            <<<keynumArr[i][j]>>>;
         } 
     }  
 }
@@ -237,16 +242,40 @@ fun void convertF02KeyNum_AllFrames()
 
 fun void computeMostLikelyKeyNum()
 {
+    //for each note in measure
     for (0 => int i; i<keynumArr.size(); i++)
-    {
-        for (0=>int j; j<keynumArr[0].size(); j++)
-        {
-            freqArr[i][j] => float tmp;
-            if (tmp>=fL)
-                Math.round(Std.ftom(tmp)) => keynumArr[i][j];
-            else
-                0.0 => keynumArr[i][j];
-            //<<<keynumArr[i][j]>>>;
-        } 
+    { 
+        
+        // count occurences of each keynum value
+        float histogram[128]; 
+        0 => float mode; 0 => int this_keynum;
+        for (0 => int j; j < keynumArr[0].size(); j++) {
+            keynumArr[i][j]$int => this_keynum;
+            if (this_keynum<0) 
+                0 => this_keynum;
+            histogram[this_keynum] + 1 => histogram[this_keynum];
+            Math.max(mode, histogram[this_keynum]) => mode;
+        }
+        
+        // select mode - this is the midi pitch for the note
+        for (0 => int j; j < histogram.size(); j++) {
+            if (histogram[j] == mode) 
+            {
+                j => midiArr[i];
+            }
+        }
     } 
+}
+
+// *********************************** playSynthesizedMeasure() **********************
+
+fun void playSynthesizedMeasure()
+{
+    0.6 => s.gain;
+    for (0 => int i; i<midiArr.size(); i++)
+    {
+        Std.mtof(midiArr[i]) => s.freq;
+        if(i%4==0) <<<i/4 + 1>>>; //print beat
+        divDur::second => now;
+    }
 }
