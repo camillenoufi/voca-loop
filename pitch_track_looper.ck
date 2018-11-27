@@ -1,10 +1,14 @@
 //--
-// name: pitch_track_new.ck
-// desc: adc pitch-tracker (via cepstrum and RMS-treshold)
+// name: pitch_track_looper.ck
+// desc: adc looper (via cepstrum and RMS-tresholded pitch-tracking) with various playback tones
 //
 // author: Camille Noufi
 //   date: Nov 2018
 //--
+
+// See "Execution (Main)" for start of code
+// SETUP modifies pitch tracking and quantization variables
+// HELPER FUNCTIONS do the work
  
 // *********************************************************************************
 // ******************* SETUP: PITCH DETECTION VARIABLES ****************************
