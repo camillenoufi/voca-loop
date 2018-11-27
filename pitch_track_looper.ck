@@ -9,6 +9,16 @@
 // See "Execution (Main)" section for start of run-time code
 // SETUP modifies pitch tracking and quantization variables
 // HELPER FUNCTIONS do the work
+
+// *********************************************************************************
+// ******************* CONSTANT SYNCER VARIABLES ****************************
+// *********************************************************************************
+
+// constant (input) temporal values driving quantization
+80 => float BEATS_PER_MIN; //tempo
+3 => float BEATS_PER_MEAS; //meter x/4
+4 => float DIVS_PER_BEAT; //4 - 16th note quant, 2 - 8th note quant, etc...
+60 => float SEC_PER_MIN;
  
 // *********************************************************************************
 // ******************* SETUP: PITCH DETECTION VARIABLES ****************************
@@ -37,15 +47,7 @@ Windowing.hamming( fft.size() ) => fft.window;
 second / samp => float SRATE;
 
 
-// *********************************************************************************
 // ***************** SETUP: QUANTIZATION AND PLAYBACK VARIABLES ********************
-// *********************************************************************************
-
-// constant (input) temporal values driving quantization
-80 => float BEATS_PER_MIN; //tempo
-3 => float BEATS_PER_MEAS; //meter x/4
-4 => float DIVS_PER_BEAT; //4 - 16th note quant, 2 - 8th note quant, etc...
-60 => float SEC_PER_MIN;
 
 // sample and duration calculations
 (BEATS_PER_MEAS*DIVS_PER_BEAT) $ int => int divsPerMeasure;
@@ -104,6 +106,8 @@ spork ~ execute(2);
 (4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
 spork ~ execute(3);
 1::hour => now;
+
+
 
 // *********************************************************************************
 // ************************** HELPER FUNCTIONS (ACTUAL PROCESSING) *****************
@@ -328,8 +332,6 @@ fun void playSynthesizedMeasure(int type, int midiArr[])
         }
         0.0 => w.gain;     
     }    
-    
-    
 }
 
 
