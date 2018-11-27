@@ -13,11 +13,6 @@
 // analysis
 adc => PoleZero dcblock => BPF bpf => FFT fft =^ RMS rms => blackhole;
 IFFT ifft => blackhole;
-// synthesis
-TriOsc s => JCRev r => dac;
-
-// set reverb mix
-.05 => r.mix;
 // set to block DC
 .99 => dcblock.blockZero;
 
@@ -44,17 +39,17 @@ second / samp => float srate;
 // ***************** SETUP: QUANTIZATION AND PLAYBACK VARIABLES ********************
 // *********************************************************************************
 
-// input temporal values driving quantization
-60 => float beatsPerMin; //tempo
-4 => float beatsPerMeasure; //meter x/4
-4 => float divsPerBeat; //4 - 16th note quant, 2 - 8th note quant, etc...
-60 => float secPerMin;
+// constant (input) temporal values driving quantization
+60 => float BEATS_PER_MIN; //tempo
+4 => float BEATS_PER_MEAS; //meter x/4
+4 => float DIVS_PER_BEAT; //4 - 16th note quant, 2 - 8th note quant, etc...
+60 => float SEC_PER_MIN;
 
 // sample and duration calculations
-(beatsPerMeasure*divsPerBeat) $ int => int divsPerMeasure;
-(secPerMin * srate) / (divsPerBeat * beatsPerMin) => float samplesPerDiv; //samples per smallest note div
+(BEATS_PER_MEAS*DIVS_PER_BEAT) $ int => int divsPerMeasure;
+(SEC_PER_MIN * srate) / (DIVS_PER_BEAT * BEATS_PER_MIN) => float samplesPerDiv; //samples per smallest note div
 Math.round( samplesPerDiv / (FFT_SIZE*HOP_SIZE) ) $ int => int numFramesPerDiv;
-secPerMin / (beatsPerMin * divsPerBeat) => float divDur; //duration in seconds of smallest note div
+SEC_PER_MIN / (BEATS_PER_MIN * DIVS_PER_BEAT) => float divDur; //duration in seconds of smallest note div
 
 //initialize storage arrays
 float freqArr[divsPerMeasure][numFramesPerDiv]; //to hold measure frequencies
@@ -67,30 +62,48 @@ float keynumArr[divsPerMeasure][numFramesPerDiv];
 for (0 => int i; i<keynumArr.size(); i++) 
     for (0 => int j; j<keynumArr[0].size(); j++)
         0 => keynumArr[i][j];
- 
+
 int midiArr[divsPerMeasure]; // to hold midi note keynums
 for (0 => int i; i<midiArr.size(); i++) 
     0 => midiArr[i];
 
-  
+
 // *********************************************************************************
-// ***************************** EXECUTION STEPS (MAIN) ****************************
+// ***************************** EXECUTION (MAIN) **********************************
 // *********************************************************************************
 
-// 1 measure click-track countdown
-clickTrackCountdown();
 
-// "record" adc input for 1 measure
-recordADC_F0();
+fun void execute(int type)
+{
+    <<<"record instrument", type>>>;
+        
+    // 1 measure click-track countdown
+    clickTrackCountdown();
+    
+    // "record" adc input for 1 measure
+    recordADC_F0();
+    
+    // freq->keynum results
+    convertF02KeyNum_AllFrames();
+    
+    // get likely keynum for each note
+    computeMostLikelyKeyNum();
+    
+    // play back results in a loop
+    while (true) 
+    {
+        playSynthesizedMeasure(type);
+    }
+}
 
-// freq->keynum results
-convertF02KeyNum_AllFrames();
 
-// get likely keynum results
-computeMostLikelyKeyNum();
+spork ~ execute(1);
+(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
+spork ~ execute(2);
+(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
+spork ~ execute(3);
 
-// play back results
-playSynthesizedMeasure();
+
 
 // *********************************************************************************
 // ************************** HELPER FUNCTIONS (ACTUAL PROCESSING) *****************
@@ -99,16 +112,18 @@ playSynthesizedMeasure();
 
 fun void clickTrackCountdown()
 {
-    0 => s.gain;
-    for (0 => int i; i<beatsPerMeasure; i++)
+    <<<"countdown:">>>;
+    for (0 => int i; i<BEATS_PER_MEAS; i++)
     {
         <<< (i+1) >>>; 
-        (divsPerBeat*divDur)::second => now;
+        (DIVS_PER_BEAT*divDur)::second => now;
     }
 }
 
 fun void recordADC_F0() 
 {
+    <<<"go:">>>;  
+      
     // for all notes in measure
     0 => float tmpF0; 
     for (0=>int i; i<freqArr.size(); i++)
@@ -121,7 +136,7 @@ fun void recordADC_F0()
             (FFT_SIZE*HOP_SIZE)::samp => now;
         }
         //print beat
-        if(i%4==0) <<<i/4 + 1>>>;
+        if(i%BEATS_PER_MEAS==0) <<<(i/BEATS_PER_MEAS + 1)$int>>>;
     } 
 }
 
@@ -176,7 +191,7 @@ fun float getF0viaCepstrum()
         Math.log(this_fval) => this_fval; //take the log
         this_fval$complex => logVals[i];  //cast to complex for IFFT UAna input
     }    
-    // take IFFT of 1024-point frame and put result into cepstrum array
+    // take IFFT of 102BEATS_PER_MEAS-point frame and put result into cepstrum array
     ifft.transform(logVals);
     ifft.samples(c);
     
@@ -233,7 +248,7 @@ fun void convertF02KeyNum_AllFrames()
                 Math.round(Std.ftom(tmp)) => keynumArr[i][j];
             else
                 0.0 => keynumArr[i][j];
-            <<<keynumArr[i][j]>>>;
+            //<<<keynumArr[i][j]>>>;
         } 
     }  
 }
@@ -269,13 +284,45 @@ fun void computeMostLikelyKeyNum()
 
 // *********************************** playSynthesizedMeasure() **********************
 
-fun void playSynthesizedMeasure()
+fun void playSynthesizedMeasure(int type)
 {
-    0.6 => s.gain;
-    for (0 => int i; i<midiArr.size(); i++)
-    {
-        Std.mtof(midiArr[i]) => s.freq;
-        if(i%4==0) <<<i/4 + 1>>>; //print beat
-        divDur::second => now;
+    
+    if (type==1) {
+        TriOsc t => JCRev r => dac;
+        .05 => r.mix;        
+        0.6 => t.gain;
+        for (0 => int i; i<midiArr.size(); i++)
+        {
+            Std.mtof(midiArr[i]) => t.freq;
+            //if(i%BEATS_PER_MEAS==0) <<<i/BEATS_PER_MEAS + 1>>>; //print beat
+            divDur::second => now;
+        }
+        0.0 => t.gain;    
     }
+    else if (type==2) {
+        SinOsc s => JCRev r => dac;
+        .1 => r.mix;        
+        0.6 => s.gain;
+        for (0 => int i; i<midiArr.size(); i++)
+        {
+            Std.mtof(midiArr[i]) => s.freq;
+            //if(i%BEATS_PER_MEAS==0) <<<i/BEATS_PER_MEAS + 1>>>; //print beat
+            divDur::second => now;
+        }
+        0.0 => s.gain;     
+    }
+    else {
+        SawOsc w => JCRev r => dac;
+        .2 => r.mix;        
+        0.6 => w.gain;
+        for (0 => int i; i<midiArr.size(); i++)
+        {
+            Std.mtof(midiArr[i]) => w.freq;
+            //if(i%BEATS_PER_MEAS==0) <<<i/BEATS_PER_MEAS + 1>>>; //print beat
+            divDur::second => now;
+        }
+        0.0 => w.gain;     
+    }    
+    
+    
 }
