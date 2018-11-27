@@ -20,6 +20,8 @@
 4 => float DIVS_PER_BEAT; //4 - 16th note quant, 2 - 8th note quant, etc...
 60 => float SEC_PER_MIN;
  
+ 
+ 
 // *********************************************************************************
 // ******************* SETUP: PITCH DETECTION VARIABLES ****************************
 // *********************************************************************************
@@ -56,19 +58,19 @@ Math.round( samplesPerDiv / (FFT_SIZE*HOP_SIZE) ) $ int => int numFramesPerDiv;
 <<<numFramesPerDiv>>>;
 SEC_PER_MIN / (BEATS_PER_MIN * DIVS_PER_BEAT) => float divDur; //duration in seconds of smallest note div
 
-//initialize storage arrays
-float freqArr[divsPerMeasure][numFramesPerDiv]; //to hold measure frequencies
+//initialize storage arrays:
+//to hold measure frequencies
+float freqArr[divsPerMeasure][numFramesPerDiv]; 
 for (0 => int i; i<freqArr.size(); i++) 
     for (0 => int j; j<freqArr[0].size(); j++)
         0 => freqArr[i][j];
-
-//to hold measure keynums for all FFT frames
+//to hold midi keynums for all FFT frames
 float keynumArr[divsPerMeasure][numFramesPerDiv];
 for (0 => int i; i<keynumArr.size(); i++) 
     for (0 => int j; j<keynumArr[0].size(); j++)
         0 => keynumArr[i][j];
-
-int midiArr[divsPerMeasure]; // to hold midi note keynums
+// to hold per-note midi keynums
+int midiArr[divsPerMeasure]; 
 for (0 => int i; i<midiArr.size(); i++) 
     0 => midiArr[i];
 
@@ -96,7 +98,7 @@ fun void execute(int type)
     
     // play back results in a loop
     playbackLoopGo(type);
-    //1::hour => now;
+
 }
 
 
@@ -105,6 +107,7 @@ spork ~ execute(1);
 spork ~ execute(2);
 (4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
 spork ~ execute(3);
+
 1::hour => now;
 
 
@@ -114,6 +117,7 @@ spork ~ execute(3);
 // *********************************************************************************
 
 
+// ******************************* clickTrackCountdown() *********************************
 fun void clickTrackCountdown()
 {
     <<<"countdown:">>>;
@@ -124,6 +128,7 @@ fun void clickTrackCountdown()
     }
 }
 
+// ******************************* recordADC_F0() *********************************
 fun void recordADC_F0() 
 {  
     // for all notes in measure
@@ -173,7 +178,6 @@ fun int flagAboveRMSThresh() // adjust hardcoded values depending on space/mic s
 }
 
 // ********************************** getF0viaCepstrum() *******************************
-
 // cepstrum-based pitch: f0 = scaled_reciprocal(idx(max(IFFT(log(mag^2(FFT(audio_samples)))))))
 fun float getF0viaCepstrum()
 {
@@ -214,8 +218,6 @@ fun float getF0viaCepstrum()
 }
 
 // *********************************** getF0viaSpectrumMax *****************************
-
-//use for comparison to cepstrum
 fun float getF0viaSpectrumMax()
 {
     0 => float max; int where;
@@ -236,7 +238,6 @@ fun float getF0viaSpectrumMax()
 }
 
 // ********************************** convertF02KeyNum_AllFrames() ****************************
-
 fun void convertF02KeyNum_AllFrames()
 {
     for (0 => int i; i<freqArr.size(); i++)
@@ -254,7 +255,6 @@ fun void convertF02KeyNum_AllFrames()
 }
 
 // *********************************** computeMostLikelyKeyNum() **********************
-
 fun void computeMostLikelyKeyNum()
 {
     //for each note in measure
@@ -282,8 +282,7 @@ fun void computeMostLikelyKeyNum()
     } 
 }
 
-// *********************************** playSynthesizedMeasure() **********************
-
+// *********************************** playbackLoopGo() **********************
 fun void playbackLoopGo(int type) 
 {
     int thisMidiArr[divsPerMeasure]; // to hold midi note keynums
@@ -336,7 +335,6 @@ fun void playSynthesizedMeasure(int type, int midiArr[])
 
 
 // *********************************** printBeat() **********************
-
 fun void printBeat(int i)
 {
     if(i%DIVS_PER_BEAT == 0) 
