@@ -25,7 +25,6 @@ IFFT ifft => blackhole;
 1200 => float fH;
 Math.sqrt(fL*fH) => float fC;
 fC/(fH-fL) => float Q;
-<<<Q>>>;
 bpf.set(fC,Q);
 
 
@@ -43,8 +42,8 @@ second / samp => float SRATE;
 // *********************************************************************************
 
 // constant (input) temporal values driving quantization
-60 => float BEATS_PER_MIN; //tempo
-4 => float BEATS_PER_MEAS; //meter x/4
+80 => float BEATS_PER_MIN; //tempo
+3 => float BEATS_PER_MEAS; //meter x/4
 4 => float DIVS_PER_BEAT; //4 - 16th note quant, 2 - 8th note quant, etc...
 60 => float SEC_PER_MIN;
 
@@ -52,6 +51,7 @@ second / samp => float SRATE;
 (BEATS_PER_MEAS*DIVS_PER_BEAT) $ int => int divsPerMeasure;
 (SEC_PER_MIN * SRATE) / (DIVS_PER_BEAT * BEATS_PER_MIN) => float samplesPerDiv; //samples per smallest note div
 Math.round( samplesPerDiv / (FFT_SIZE*HOP_SIZE) ) $ int => int numFramesPerDiv;
+<<<numFramesPerDiv>>>;
 SEC_PER_MIN / (BEATS_PER_MIN * DIVS_PER_BEAT) => float divDur; //duration in seconds of smallest note div
 
 //initialize storage arrays
@@ -133,8 +133,7 @@ fun void recordADC_F0()
             tmpF0 => freqArr[i][j];
             (FFT_SIZE*HOP_SIZE)::samp => now;
         }
-        //print beat
-        if(i%BEATS_PER_MEAS==0) <<<"recording beat:", (i/BEATS_PER_MEAS + 1)$int>>>;
+        printBeat(i);
     } 
 }
 
@@ -300,7 +299,7 @@ fun void playSynthesizedMeasure(int type, int midiArr[])
         for (0 => int i; i<midiArr.size(); i++)
         {
             Std.mtof(midiArr[i]) => t.freq;
-            //if(i%BEATS_PER_MEAS==0) <<<i/BEATS_PER_MEAS + 1>>>; //print beat
+            //printBeat(i);
             divDur::second => now;
         }
         0.0 => t.gain;    
@@ -308,11 +307,11 @@ fun void playSynthesizedMeasure(int type, int midiArr[])
     else if (type==2) {
         SinOsc s => JCRev r => dac;
         .1 => r.mix;        
-        0.6 => s.gain;
+        0.8 => s.gain;
         for (0 => int i; i<midiArr.size(); i++)
         {
             Std.mtof(midiArr[i]) => s.freq;
-            //if(i%BEATS_PER_MEAS==0) <<<i/BEATS_PER_MEAS + 1>>>; //print beat
+            //printBeat(i);
             divDur::second => now;
         }
         0.0 => s.gain;     
@@ -320,15 +319,24 @@ fun void playSynthesizedMeasure(int type, int midiArr[])
     else {
         SawOsc w => JCRev r => dac;
         .1 => r.mix;        
-        0.3 => w.gain;
+        0.2 => w.gain;
         for (0 => int i; i<midiArr.size(); i++)
         {
             Std.mtof(midiArr[i]) => w.freq;
-            //if(i%BEATS_PER_MEAS==0) <<<i/BEATS_PER_MEAS + 1>>>; //print beat
+            //printBeat(i);
             divDur::second => now;
         }
         0.0 => w.gain;     
     }    
     
     
+}
+
+
+// *********************************** printBeat() **********************
+
+fun void printBeat(int i)
+{
+    if(i%DIVS_PER_BEAT == 0) 
+        <<< "recording beat:", (i/DIVS_PER_BEAT + 1)$int >>>;
 }
