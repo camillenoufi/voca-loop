@@ -20,6 +20,15 @@
 4 => float DIVS_PER_BEAT; //4 - 16th note quant, 2 - 8th note quant, etc...
 60 => float SEC_PER_MIN;
  
+// *********************************************************************************
+// ******************* SETUP: PITCH DETECTION VARIABLES ****************************
+// *********************************************************************************
+
+// DRUM
+me.dir() + "/kick.wav" => string drumfile;
+if( me.args() ) me.arg(0) => drumfile; 
+SndBuf kick => dac;
+drumfile => kick.read; 
  
  
 // *********************************************************************************
@@ -28,7 +37,7 @@
 
 // analysis
 adc => PoleZero dcblock => BPF bpf => FFT fft =^ RMS rms => blackhole;
-IFFT ifft => blackhole;
+FFT fft2 => blackhole;
 // set to block DC
 .99 => dcblock.blockZero;
 
@@ -43,8 +52,8 @@ bpf.set(fC,Q);
 // set FFT params
 1024 => int FFT_SIZE;
 0.5 => float HOP_SIZE;
-FFT_SIZE => fft.size;
-Windowing.hamming( fft.size() ) => fft.window;
+FFT_SIZE => fft.size => fft2.size;
+Windowing.hamming( fft.size() ) => fft.window => fft2.window;
 // find sample rate
 second / samp => float SRATE;
 
@@ -101,12 +110,13 @@ fun void execute(int type)
 
 }
 
-
+//spork ~ execute(4);
+//(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
 spork ~ execute(1);
 (4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
-spork ~ execute(2);
-(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
-spork ~ execute(3);
+//spork ~ execute(2);
+//(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
+//spork ~ execute(3);
 
 1::hour => now;
 
@@ -142,7 +152,7 @@ fun void recordADC_F0()
             tmpF0 => freqArr[i][j];
             (FFT_SIZE*HOP_SIZE)::samp => now;
         }
-        printBeat(i);
+        //printBeat(i);
     } 
 }
 
@@ -152,8 +162,8 @@ fun float extractF0()
     // if signal is above noise floor, extract the freq
     if(flagAboveRMSThresh())
     {
-        return getF0viaSpectrumMax(); 
-        //return getF0viaCepstrum();  
+        //return getF0viaSpectrumMax(); 
+        return getF0viaCepstrum();  
     }
     else
         return 0.0;
@@ -183,37 +193,54 @@ fun float getF0viaCepstrum()
 {
     // to hold frame's fft results
     FFT_SIZE/2 => int CEPST_SIZE;
-    complex logVals[CEPST_SIZE];
-    float c[CEPST_SIZE];
+    //complex logVals[CEPST_SIZE];
+    float logVals[CEPST_SIZE];
+    //float c[CEPST_SIZE];
+    complex c[CEPST_SIZE];
+    float cr[CEPST_SIZE];
     
     //take the log of the squared magnitude of the fft (already computed to get rms)
     0 => float this_fval;
     for( 0 => int i; i < fft.fvals().size(); i++ )
     {
         fft.fval(i) => this_fval;
+        <<<this_fval>>>;
         Math.pow(this_fval,2) => this_fval; //square it
         Math.log(this_fval) => this_fval; //take the log
-        this_fval$complex => logVals[i];  //cast to complex for IFFT UAna input
+        //<<<this_fval>>>;
+        //this_fval$complex => logVals[i];  //cast to complex for IFFT UAna input
+        this_fval => logVals[i];
     }    
-    // take IFFT of 102BEATS_PER_MEAS-point frame and put result into cepstrum array
-    ifft.transform(logVals);
-    ifft.samples(c);
+    
+    // take IFFT of 1024-point frame and put result into cepstrum array
+    //ifft.transform(logVals);
+    //ifft.samples(c);
+    fft2.transform(logVals);
+    fft2.spectrum(c);
+    
+    for( 0 => int i; i < c.size(); i++ )
+    {
+        c[i].re => cr[i];
+        //<<<cr[i]>>>;
+    }  
     
     //find peak of cepstrum
-    0 => float max; 0 => float abs_c; 0 => int quefrency; 
-    for( 15 => int i; i < c.size(); i++ ) //start at 15 to ignore filter, keep source
+    0 => float max; 0 => float abs_c; 0 => int qi; 
+    for( 10 => int i; i < cr.size(); i++ ) // indices of sung freq quefrencies 100-1200hz
     {
-        Math.fabs(c[i]) => abs_c;
+        //<<<c[i]>>>;
+        Math.fabs(cr[i]) => abs_c;
         if( abs_c > max )
         {
             abs_c => max;
-            i => quefrency;
+            i => qi;
         }
     }
     //<<< quefrency >>>;
     
     // convert to to frequency
-    SRATE / quefrency$float  => float target_freq;
+    SRATE / qi$float  => float target_freq;
+    //<<<target_freq>>>;
     return target_freq;
 }
 
@@ -279,6 +306,8 @@ fun void computeMostLikelyKeyNum()
                 j => midiArr[i];
             }
         }
+        
+        //<<<midiArr[i]>>>;
     } 
 }
 
@@ -319,7 +348,7 @@ fun void playSynthesizedMeasure(int type, int midiArr[])
         }
         0.0 => s.gain;     
     }
-    else {
+    else if (type==3) {
         SawOsc w => JCRev r => dac;
         .1 => r.mix;        
         0.2 => w.gain;
@@ -330,7 +359,20 @@ fun void playSynthesizedMeasure(int type, int midiArr[])
             divDur::second => now;
         }
         0.0 => w.gain;     
-    }    
+    }
+    else if (type==4) {
+        for (0 => int i; i<midiArr.size(); i++)
+        {
+            if(midiArr[i]>10) 
+            {
+                0 => kick.pos;
+                1.2 => kick.gain;
+                1 => kick.rate;
+            }
+
+           divDur::second => now;
+        }
+    }        
 }
 
 
