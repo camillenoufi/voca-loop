@@ -15,8 +15,8 @@
 // *********************************************************************************
 
 // constant (input) temporal values driving quantization
-80 => float BEATS_PER_MIN; //tempo
-3 => float BEATS_PER_MEAS; //meter x/4
+60 => float BEATS_PER_MIN; //tempo
+4 => float BEATS_PER_MEAS; //meter x/4
 4 => float DIVS_PER_BEAT; //4 - 16th note quant, 2 - 8th note quant, etc...
 60 => float SEC_PER_MIN;
  
