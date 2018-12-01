@@ -11,6 +11,8 @@ TagManager:
   - violin
   - stop
   - play
+  - pink
+  - drum
   layers:
   - Default
   - TransparentFX

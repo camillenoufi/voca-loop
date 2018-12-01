@@ -22,7 +22,7 @@ public class objSelect : MonoBehaviour {
 	{
 		string thisObject = GetComponent<SpriteRenderer>().tag;
         SetHaloRender(true);
-        if(thisObject == "piano" || thisObject == "guitar" || thisObject == "violin")
+        if(thisObject == "piano" || thisObject == "guitar" || thisObject == "violin" || thisObject == "drum")
         {
             main.currentInstrument = thisObject;
         }
@@ -31,7 +31,7 @@ public class objSelect : MonoBehaviour {
             Debug.Log("destroying");
             main.destroyLoop = true;
         }
-        if (main.currentInstrument == "piano")
+        if (main.currentInstrument == "drum")
         {
             Instantiate(chuckSound, gameObject.transform.position, gameObject.transform.rotation);
         }

@@ -9,7 +9,7 @@
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <RootNamespace></RootNamespace>
-    <ProjectGuid>{22901FFF-7E16-C677-A44A-D829E83ACD48}</ProjectGuid>
+    <ProjectGuid>{3E6AB25B-84AF-D4BF-D204-B2BC63F60EFE}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <AssemblyName>Assembly-CSharp-Editor</AssemblyName>
@@ -55,16 +55,16 @@
   <ItemGroup>
      <Compile Include="Assets\Chunity\Scripts\Editor\ChuckExecutionOrder.cs" />
  <Reference Include="UnityEditor.StandardEvents">
- <HintPath>/Users/camillenoufi/Documents/git_repos/vocaloop/paintSequencer/Library/ScriptAssemblies/UnityEditor.StandardEvents.dll</HintPath>
+ <HintPath>/Users/camillenoufi/Documents/git_repos/voca-loop/vocaloop_unity/Library/ScriptAssemblies/UnityEditor.StandardEvents.dll</HintPath>
  </Reference>
  <Reference Include="Unity.TextMeshPro.Editor">
- <HintPath>/Users/camillenoufi/Documents/git_repos/vocaloop/paintSequencer/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
+ <HintPath>/Users/camillenoufi/Documents/git_repos/voca-loop/vocaloop_unity/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
  </Reference>
  <Reference Include="Unity.PackageManagerUI.Editor">
- <HintPath>/Users/camillenoufi/Documents/git_repos/vocaloop/paintSequencer/Library/ScriptAssemblies/Unity.PackageManagerUI.Editor.dll</HintPath>
+ <HintPath>/Users/camillenoufi/Documents/git_repos/voca-loop/vocaloop_unity/Library/ScriptAssemblies/Unity.PackageManagerUI.Editor.dll</HintPath>
  </Reference>
  <Reference Include="Unity.TextMeshPro">
- <HintPath>/Users/camillenoufi/Documents/git_repos/vocaloop/paintSequencer/Library/ScriptAssemblies/Unity.TextMeshPro.dll</HintPath>
+ <HintPath>/Users/camillenoufi/Documents/git_repos/voca-loop/vocaloop_unity/Library/ScriptAssemblies/Unity.TextMeshPro.dll</HintPath>
  </Reference>
  <Reference Include="UnityEngine.AIModule">
  <HintPath>/Applications/Unity/Unity.app/Contents/Managed/UnityEngine/UnityEngine.AIModule.dll</HintPath>
@@ -351,7 +351,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="Assembly-CSharp.csproj">
-      <Project>{C943B7F8-8405-1447-4172-DEFBD5A2CE2C}</Project>      <Name>Assembly-CSharp</Name>    </ProjectReference>
+      <Project>{E1A712F5-0017-3756-A854-20D06F0B4CCF}</Project>      <Name>Assembly-CSharp</Name>    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

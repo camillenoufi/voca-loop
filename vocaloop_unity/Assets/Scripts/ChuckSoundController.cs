@@ -71,7 +71,18 @@ public class ChuckSoundController : MonoBehaviour {
 			60 => float SEC_PER_MIN;
 			<<<BEATS_PER_MIN>>>;
 
+			// *********************************************************************************
+			// ******************* SETUP: INSTRUMENTS ******************************************
+			// *********************************************************************************
 
+			// connect for synths
+			JCRev r => dac;
+			
+			// DRUM
+			me.dir() + ""/kick.wav"" => string drumfile;
+			if( me.args() ) me.arg(0) => drumfile; 
+			SndBuf kick => dac;
+			drumfile => kick.read; 
 
 			// *********************************************************************************
 			// ******************* SETUP: PITCH DETECTION VARIABLES ****************************
@@ -153,6 +164,8 @@ public class ChuckSoundController : MonoBehaviour {
 			}
 
 
+			spork ~ execute(4);
+			(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
 			spork ~execute(2);
 			(4*BEATS_PER_MEAS* DIVS_PER_BEAT*divDur)::second => now;
 			spork ~execute(1);
@@ -363,43 +376,57 @@ public class ChuckSoundController : MonoBehaviour {
 
 				if (type == 1)
 				{
-					TriOsc t => JCRev r => dac;
+					TriOsc t => r;
 					.1 => r.mix;
 					0.7 => t.gain;
 					for (0 => int i; i < midiArr.size(); i++)
 					{
 						Std.mtof(midiArr[i]) => t.freq;
-						//signalBeat(i);
 						divDur::second => now;
 					}
 					0.0 => t.gain;
+					t =< r;
 				}
 				else if (type == 2)
 				{
-					SinOsc s => JCRev r => dac;
+					SinOsc s => r;
 					.1 => r.mix;
-					1.0 => s.gain;
+					1.3 => s.gain;
 					for (0 => int i; i < midiArr.size(); i++)
 					{
 						Std.mtof(midiArr[i]) => s.freq;
-						//signalBeat(i);
 						divDur::second => now;
 					}
 					0.0 => s.gain;
+					s =< r;
 				}
-				else
+				else if (type==3)
 				{
-					SawOsc w => JCRev r => dac;
+					SawOsc w => r;
 					.1 => r.mix;
 					0.2 => w.gain;
 					for (0 => int i; i < midiArr.size(); i++)
 					{
 						Std.mtof(midiArr[i]) => w.freq;
-						//signalBeat(i);
 						divDur::second => now;
 					}
 					0.0 => w.gain;
+					w =< r;
 				}
+				else if (type==4) {
+					for (0 => int i; i<midiArr.size(); i++)
+					{
+						if(midiArr[i]>10) 
+						{
+							0 => kick.pos;
+							1.2 => kick.gain;
+							1 => kick.rate;
+						}
+
+					divDur::second => now;
+					}
+				}
+
 			}
 
 
@@ -429,7 +456,7 @@ public class ChuckSoundController : MonoBehaviour {
 		");
 
         myBeatOnListener1 = gameObject.AddComponent<ChuckEventListener>();
-        myBeatOnListener1.ListenForEvent(myChuck, "notifierOn", SetInstrumentBeatOn1);
+        myBeatOnListener1.ListenForEvent(myChuck, "notifierOn1", SetInstrumentBeatOn1);
 
         myBeatOffListener1 = gameObject.AddComponent<ChuckEventListener>();
         myBeatOffListener1.ListenForEvent(myChuck, "notifierOff", SetInstrumentBeatOff1);

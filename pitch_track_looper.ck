@@ -25,10 +25,14 @@
 // *********************************************************************************
 
 // DRUM
-me.dir() + "/kick.wav" => string drumfile;
+"vocaloop_unity/Assets/StreamingAssets/" => string subDir;
+me.dir() + subDir + "/kick.wav" => string drumfile;
 if( me.args() ) me.arg(0) => drumfile; 
 SndBuf kick => dac;
 drumfile => kick.read; 
+
+JCRev r => dac;
+0.1 => r.mix;
  
  
 // *********************************************************************************
@@ -110,13 +114,13 @@ fun void execute(int type)
 
 }
 
-//spork ~ execute(4);
-//(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
+spork ~ execute(4);
+(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
 spork ~ execute(1);
 (4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
-//spork ~ execute(2);
-//(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
-//spork ~ execute(3);
+spork ~ execute(2);
+(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
+spork ~ execute(3);
 
 1::hour => now;
 
@@ -152,7 +156,7 @@ fun void recordADC_F0()
             tmpF0 => freqArr[i][j];
             (FFT_SIZE*HOP_SIZE)::samp => now;
         }
-        //printBeat(i);
+        printBeat(i);
     } 
 }
 
@@ -162,8 +166,8 @@ fun float extractF0()
     // if signal is above noise floor, extract the freq
     if(flagAboveRMSThresh())
     {
-        //return getF0viaSpectrumMax(); 
-        return getF0viaCepstrum();  
+        return getF0viaSpectrumMax(); 
+        //return getF0viaCepstrum();  
     }
     else
         return 0.0;
@@ -204,7 +208,7 @@ fun float getF0viaCepstrum()
     for( 0 => int i; i < fft.fvals().size(); i++ )
     {
         fft.fval(i) => this_fval;
-        <<<this_fval>>>;
+        //<<<this_fval>>>;
         Math.pow(this_fval,2) => this_fval; //square it
         Math.log(this_fval) => this_fval; //take the log
         //<<<this_fval>>>;
@@ -325,8 +329,7 @@ fun void playSynthesizedMeasure(int type, int midiArr[])
 {
     
     if (type==1) {
-        TriOsc t => JCRev r => dac;
-        .1 => r.mix;        
+        TriOsc t => r;       
         0.8 => t.gain;
         for (0 => int i; i<midiArr.size(); i++)
         {
@@ -334,11 +337,11 @@ fun void playSynthesizedMeasure(int type, int midiArr[])
             //printBeat(i);
             divDur::second => now;
         }
-        0.0 => t.gain;    
+        0.0 => t.gain;
+        t =< r;    
     }
     else if (type==2) {
-        SinOsc s => JCRev r => dac;
-        .1 => r.mix;        
+        SinOsc s => r;      
         0.8 => s.gain;
         for (0 => int i; i<midiArr.size(); i++)
         {
@@ -346,11 +349,11 @@ fun void playSynthesizedMeasure(int type, int midiArr[])
             //printBeat(i);
             divDur::second => now;
         }
-        0.0 => s.gain;     
+        0.0 => s.gain; 
+        s =< r;    
     }
     else if (type==3) {
-        SawOsc w => JCRev r => dac;
-        .1 => r.mix;        
+        SawOsc w => r;       
         0.2 => w.gain;
         for (0 => int i; i<midiArr.size(); i++)
         {
@@ -358,7 +361,8 @@ fun void playSynthesizedMeasure(int type, int midiArr[])
             //printBeat(i);
             divDur::second => now;
         }
-        0.0 => w.gain;     
+        0.0 => w.gain; 
+        w =< r;    
     }
     else if (type==4) {
         for (0 => int i; i<midiArr.size(); i++)
@@ -369,8 +373,8 @@ fun void playSynthesizedMeasure(int type, int midiArr[])
                 1.2 => kick.gain;
                 1 => kick.rate;
             }
-
-           divDur::second => now;
+            //printBeat(i);
+            divDur::second => now;
         }
     }        
 }
