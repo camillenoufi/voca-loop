@@ -15,21 +15,30 @@
 // *********************************************************************************
 
 // constant (input) temporal values driving quantization
-60 => float BEATS_PER_MIN; //tempo
-4 => float BEATS_PER_MEAS; //meter x/4
+80 => float BEATS_PER_MIN; //tempo
+8 => float BEATS_PER_MEAS; //meter x/4
 4 => float DIVS_PER_BEAT; //4 - 16th note quant, 2 - 8th note quant, etc...
 60 => float SEC_PER_MIN;
  
 // *********************************************************************************
-// ******************* SETUP: PITCH DETECTION VARIABLES ****************************
+// ******************* SETUP: INSTRUMENTS ******************************************
 // *********************************************************************************
-
-// DRUM
 "vocaloop_unity/Assets/StreamingAssets/" => string subDir;
-me.dir() + subDir + "/kick.wav" => string drumfile;
-if( me.args() ) me.arg(0) => drumfile; 
+
+// DRUM KICK
+me.dir() + subDir + "/kick.wav" => string kickfile;
+if( me.args() ) me.arg(0) => kickfile; 
 SndBuf kick => dac;
-drumfile => kick.read; 
+kickfile => kick.read;
+// DRUM SNARE
+me.dir() + subDir + "/snare.wav" => string snarefile;
+if( me.args() ) me.arg(0) => snarefile; 
+SndBuf snare => dac;
+snarefile => snare.read; 
+
+
+
+
 
 JCRev r => dac;
 0.1 => r.mix;
@@ -107,21 +116,31 @@ fun void execute(int type)
     convertF02KeyNum_AllFrames();
     
     // get likely keynum for each note
-    computeMostLikelyKeyNum();
+    computeMostLikelyKeyNum(type);
     
     // play back results in a loop
     playbackLoopGo(type);
 
 }
 
+
+//drums
 spork ~ execute(4);
 (4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
+spork ~ execute(5);
+(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
+
+//synths
 spork ~ execute(1);
 (4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
 spork ~ execute(2);
 (4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
 spork ~ execute(3);
 
+//sampled instruments
+
+
+//max run time
 1::hour => now;
 
 
@@ -134,7 +153,7 @@ spork ~ execute(3);
 // ******************************* clickTrackCountdown() *********************************
 fun void clickTrackCountdown()
 {
-    <<<"countdown:">>>;
+    <<<"countdown:",BEATS_PER_MEAS$int,"/4">>>;
     for (0 => int i; i<BEATS_PER_MEAS; i++)
     {
         <<< (i+1) >>>; 
@@ -146,18 +165,24 @@ fun void clickTrackCountdown()
 fun void recordADC_F0() 
 {  
     // for all notes in measure
-    0 => float tmpF0; 
     for (0=>int i; i<freqArr.size(); i++)
     {
-        //for all buffer frames in note
-        for (0=>int j; j<freqArr[0].size(); j++)
-        {
-            extractF0() => tmpF0;
-            tmpF0 => freqArr[i][j];
-            (FFT_SIZE*HOP_SIZE)::samp => now;
-        }
+        spork ~ recordNote(i);
         printBeat(i);
+        divDur::second => now;
     } 
+}
+
+fun void recordNote(int i)
+{
+    0 => float tmpF0; 
+    //for all buffer frames in note
+    for (0=>int j; j<freqArr[0].size(); j++)
+    {
+        extractF0() => tmpF0;
+        tmpF0 => freqArr[i][j];
+        (FFT_SIZE*HOP_SIZE)::samp => now;
+    }
 }
 
 // ******************************* extractF0() *********************************
@@ -286,8 +311,11 @@ fun void convertF02KeyNum_AllFrames()
 }
 
 // *********************************** computeMostLikelyKeyNum() **********************
-fun void computeMostLikelyKeyNum()
+fun void computeMostLikelyKeyNum(int type)
 {
+    12 => int octave;
+    13 => int ninth;
+    
     //for each note in measure
     for (0 => int i; i<keynumArr.size(); i++)
     { 
@@ -297,7 +325,7 @@ fun void computeMostLikelyKeyNum()
         0 => float mode; 0 => int this_keynum;
         for (0 => int j; j < keynumArr[0].size(); j++) {
             keynumArr[i][j]$int => this_keynum;
-            if (this_keynum<0) 
+            if (this_keynum<15) 
                 0 => this_keynum;
             histogram[this_keynum] + 1 => histogram[this_keynum];
             Math.max(mode, histogram[this_keynum]) => mode;
@@ -309,9 +337,41 @@ fun void computeMostLikelyKeyNum()
             {
                 j => midiArr[i];
             }
+        }        
+    }
+    
+    // perform drum beat corrections
+    if(type >= 4) 
+    {
+        for (1 => int i; i < midiArr.size(); i++) {
+            if (midiArr[i-1] != 0) {
+                0 => midiArr[i];
+            }
         }
-        
-        //<<<midiArr[i]>>>;
+    }
+    // perform pitch corrections
+    else 
+    {
+        for (1 => int i; i < midiArr.size(); i++) {
+            //unison/octave doubling correction
+            if (midiArr[i] == (midiArr[i-1] + octave)) {
+                midiArr[i-1] => midiArr[i]; 
+            }
+            // octave doubling correction following interval change
+            else if ((midiArr[i-1] != 0) && (midiArr[i] >= (midiArr[i-1] + ninth))) {
+                (midiArr[i] - octave) => midiArr[i];
+            }
+            else if (midiArr[i] <= (midiArr[i-1] - ninth)) {
+                (midiArr[i] + octave) => midiArr[i];
+            }
+            if(midiArr[i]<15)
+            {
+                0 => midiArr[i];
+            }
+            
+            
+            <<<midiArr[i]>>>;
+        } 
     } 
 }
 
@@ -327,42 +387,43 @@ fun void playbackLoopGo(int type)
 
 fun void playSynthesizedMeasure(int type, int midiArr[])
 {
+    divDur::second => dur T;
     
     if (type==1) {
-        TriOsc t => r;       
-        0.8 => t.gain;
+        TriOsc t => ADSR e => r;       
+        0.5 => t.gain;
         for (0 => int i; i<midiArr.size(); i++)
         {
-            Std.mtof(midiArr[i]) => t.freq;
-            //printBeat(i);
-            divDur::second => now;
+            Std.mtof(midiArr[i]) => t.freq;            
+            spork ~ play(i, T, e, midiArr, [0.2,0.1,0.9,0.0], [0.0,0.0,0.9,0.0], [0.0,0.0,0.9,0.2]); //ADSR onset, sustain, last
+            T => now;
         }
         0.0 => t.gain;
-        t =< r;    
+        t =< e =< r;    
     }
     else if (type==2) {
-        SinOsc s => r;      
-        0.8 => s.gain;
+        SinOsc s => ADSR e => r;      
+        1 => s.gain;
         for (0 => int i; i<midiArr.size(); i++)
         {
             Std.mtof(midiArr[i]) => s.freq;
-            //printBeat(i);
-            divDur::second => now;
+            spork ~ play(i, T, e, midiArr, [0.2,0.1,0.9,0.0], [0.0,0.0,0.9,0.0], [0.0,0.0,0.9,0.3]); //ADSR onset, sustain, last
+            T => now;
         }
         0.0 => s.gain; 
-        s =< r;    
+        s =< e =< r;    
     }
     else if (type==3) {
-        SawOsc w => r;       
-        0.2 => w.gain;
+        SawOsc w => ADSR e => r;       
+        0.1 => w.gain;
         for (0 => int i; i<midiArr.size(); i++)
         {
             Std.mtof(midiArr[i]) => w.freq;
-            //printBeat(i);
-            divDur::second => now;
+            spork ~ play(i, T, e, midiArr, [0.2,0.1,0.9,0.0], [0.0,0.0,0.9,0.0], [0.0,0.0,0.9,0.2]); //ADSR onset, sustain, last
+            T => now;
         }
         0.0 => w.gain; 
-        w =< r;    
+        w =< e =< r;    
     }
     else if (type==4) {
         for (0 => int i; i<midiArr.size(); i++)
@@ -370,13 +431,44 @@ fun void playSynthesizedMeasure(int type, int midiArr[])
             if(midiArr[i]>10) 
             {
                 0 => kick.pos;
-                1.2 => kick.gain;
+                1 => kick.gain;
                 1 => kick.rate;
             }
-            //printBeat(i);
-            divDur::second => now;
+            T => now;
         }
-    }        
+    }
+    else if (type==5) {
+        for (0 => int i; i<midiArr.size(); i++)
+        {
+            if(midiArr[i]>10) 
+            {
+                0 => snare.pos;
+                0.8 => snare.gain;
+                1 => snare.rate;
+            }
+            T => now;
+        }
+    }         
+}
+
+fun void play(int i, dur T, ADSR e, int midiArr[], float on[], float sus[], float last[]) 
+{
+    //onset of note
+    if ( (i > 0 && (midiArr[i] != midiArr[i-1])) || i==0) {
+        e.set( (on[0]*divDur)::second, (on[1]*divDur)::second, on[2], (on[3]*divDur)::second );  //(a,d,s height % of freq,r)                
+    }
+    //last part of sustained note or last note in measure
+    else if ( ((i<midiArr.size()-1) && (midiArr[i+1] != midiArr[i])) || i==(midiArr.size()-1) ) {
+        e.set( (last[0]*divDur)::second, (last[1]*divDur)::second, last[2], (last[3]*divDur)::second );  //(a,d,s height % of freq,r)    
+    }
+    //sustained note
+    else {
+        e.set( (sus[0]*divDur)::second, (sus[1]*divDur)::second, sus[2], (sus[3]*divDur)::second );  //(a,d,s height % of freq,r)    
+    }            
+    e.keyOn();// press the key
+    T - e.releaseTime() => now; // play/wait until beginning of release
+    e.keyOff(); //release the key
+    e.releaseTime() => now; // wait until release is done
 }
 
 
