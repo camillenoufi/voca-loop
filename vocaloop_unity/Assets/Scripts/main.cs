@@ -5,7 +5,7 @@ using UnityEngine;
 public class main : MonoBehaviour {
 
     // PUBLIC EDITABLE VARIABLES (in unity editor)
-
+    public Transform chuckSound;
 
     //PUBLIC SCRIPTS
 
@@ -17,6 +17,7 @@ public class main : MonoBehaviour {
     public static bool sineFlag = false;
     public static bool sawFlag = false;
     public static bool triFlag = false;
+    public static bool adcFlag = false;
     
 
     //PRIVATE VARIABLES
@@ -32,6 +33,7 @@ public class main : MonoBehaviour {
     void Start () 
 	{
 		SetUpChuck();
+        Instantiate(chuckSound, gameObject.transform.position, gameObject.transform.rotation);
 	}
 	
 	void SetUpChuck()

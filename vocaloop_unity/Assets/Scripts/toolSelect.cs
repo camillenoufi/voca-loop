@@ -21,7 +21,12 @@ public class toolSelect : MonoBehaviour {
 	{
 		string thisObject = GetComponent<SpriteRenderer>().tag;
         SetHaloRender(true);
-    	main.currentInstrument = thisObject;
+		if (thisObject == "adc") 
+		{
+			main.adcFlag = true;
+			Debug.Log(main.currentInstrument);
+			Debug.Log("adc selected");
+		}
         if (thisObject == "stop")
         {
             Debug.Log("destroying");

@@ -174,6 +174,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5b08d1d07e1c45d7a995cef2590de81, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  chuckSound: {fileID: 4560729991539174, guid: 3aa7c6310c5424560a54b8b654b42c9b, type: 2}
 --- !u!4 &85833725
 Transform:
   m_ObjectHideFlags: 0
@@ -581,7 +582,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 235197849}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -9.5, y: 21.3, z: 4.676723}
+  m_LocalPosition: {x: -9.2, y: 21.3, z: 4.676723}
   m_LocalScale: {x: 2, y: 2, z: 1.144356}
   m_Children: []
   m_Father: {fileID: 1322924326}
@@ -609,7 +610,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae87040efdddf499d85301d443a93fbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chuckSound: {fileID: 4560729991539174, guid: 3aa7c6310c5424560a54b8b654b42c9b, type: 2}
 --- !u!61 &235197853
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -633,7 +633,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 4, y: 5}
+  m_Size: {x: 4, y: 3}
   m_EdgeRadius: 0
 --- !u!212 &235197854
 SpriteRenderer:
@@ -695,7 +695,7 @@ GameObject:
   - component: {fileID: 439218263}
   m_Layer: 5
   m_Name: sine
-  m_TagString: Untagged
+  m_TagString: sine
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -735,7 +735,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae87040efdddf499d85301d443a93fbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chuckSound: {fileID: 4560729991539174, guid: 3aa7c6310c5424560a54b8b654b42c9b, type: 2}
 --- !u!61 &439218264
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -938,7 +937,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae87040efdddf499d85301d443a93fbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chuckSound: {fileID: 4560729991539174, guid: 3aa7c6310c5424560a54b8b654b42c9b, type: 2}
 --- !u!61 &538619417
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -1231,7 +1229,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae87040efdddf499d85301d443a93fbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chuckSound: {fileID: 4560729991539174, guid: 3aa7c6310c5424560a54b8b654b42c9b, type: 2}
 --- !u!61 &786270581
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -1255,7 +1252,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 5, y: 5}
+  m_Size: {x: 5, y: 3}
   m_EdgeRadius: 0
 --- !u!212 &786270582
 SpriteRenderer:
@@ -1312,6 +1309,7 @@ GameObject:
   m_Component:
   - component: {fileID: 871511135}
   - component: {fileID: 871511136}
+  - component: {fileID: 871511137}
   m_Layer: 0
   m_Name: snare
   m_TagString: snare
@@ -1378,6 +1376,31 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!61 &871511137
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 871511134}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 8.02, y: 5.3}
+    newSize: {x: 8.02, y: 5.3}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 8.02, y: 5.3}
+  m_EdgeRadius: 0
 --- !u!1 &879261017
 GameObject:
   m_ObjectHideFlags: 0
@@ -1464,6 +1487,7 @@ GameObject:
   - component: {fileID: 960317994}
   - component: {fileID: 960317993}
   - component: {fileID: 960317992}
+  - component: {fileID: 960317996}
   m_Layer: 5
   m_Name: adc
   m_TagString: adc
@@ -1566,6 +1590,18 @@ Transform:
   m_Father: {fileID: 23253045}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &960317996
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 960317991}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd01ee59b92c04870ad454ff81a25f81, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  chuckSound: {fileID: 4560729991539174, guid: 3aa7c6310c5424560a54b8b654b42c9b, type: 2}
 --- !u!1 &1126880975
 GameObject:
   m_ObjectHideFlags: 0
@@ -1717,6 +1753,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd01ee59b92c04870ad454ff81a25f81, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  chuckSound: {fileID: 0}
 --- !u!122 &1448143334
 Halo:
   m_ObjectHideFlags: 0

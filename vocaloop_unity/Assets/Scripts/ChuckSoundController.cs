@@ -6,25 +6,33 @@ public class ChuckSoundController : MonoBehaviour {
 	
 	private ChuckSubInstance myChuck;
     private ChuckFloatSyncer myTempoSyncer;
-	ChuckEventListener myBeatOnListener1;
+	private ChuckStringSyncer myInstrumentSyncer;
+	//ChuckEventListener myInstrumentActivate;
 	
 	// Use this for initialization
 	void Start () {
         myChuck = GetComponent<ChuckSubInstance>();
 		SetChuckVars();
         RunChuckInstrument();
-        //StartCoroutine(DestroyChuckSound(SetChuckAliveTime()));
 	}
 
 	void SetChuckVars()
 	{
         myTempoSyncer = gameObject.AddComponent<ChuckFloatSyncer>();
         myTempoSyncer.SyncFloat(myChuck, "BEATS_PER_MIN"); //current instance of chuck is determining pos value
+		myInstrumentSyncer = gameObject.AddComponent<ChuckStringSyncer>();
+		myInstrumentSyncer.SyncString(myChuck, "instrument");
     }
 
     void Update()
     {
 		myTempoSyncer.SetNewValue(main.currentTempo);
+		if (main.adcFlag && main.currentInstrument!="") {
+            myInstrumentSyncer.SetNewValue(main.currentInstrument);
+            myChuck.BroadcastEvent("sporkTheLoop");
+            //Debug.Log(myInstrumentSyncer.GetCurrentValue());
+            main.adcFlag = false;
+		}
     }
 	
 	void RunChuckInstrument()
@@ -55,6 +63,9 @@ public class ChuckSoundController : MonoBehaviour {
 			// ******************* SETUP: INSTRUMENTS ******************************************
 			// *********************************************************************************
 
+			""kick"" => global string instrument;
+			global Event sporkTheLoop;
+			
 			// connect for synths
 			JCRev r => dac;
 			0.1 => r.mix;
@@ -63,6 +74,7 @@ public class ChuckSoundController : MonoBehaviour {
 			me.dir() + ""/kick.wav"" => string drumfile;
 			if( me.args() ) me.arg(0) => drumfile; 
 			SndBuf kick => dac;
+			0 => kick.gain;
 			drumfile => kick.read; 
 
 			me.dir() + ""/snare.wav"" => string snarefile;
@@ -129,30 +141,22 @@ public class ChuckSoundController : MonoBehaviour {
 			// ***************************** EXECUTION (MAIN) **********************************
 			// *********************************************************************************
 
-			// drums
-			spork ~ execute(5);
-			(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
-			spork ~ execute(4);
-			(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
-			
-			//synth instruments
-			spork ~execute(2);
-			(4*BEATS_PER_MEAS* DIVS_PER_BEAT*divDur)::second => now;
-			spork ~execute(1);
-			(4*BEATS_PER_MEAS* DIVS_PER_BEAT*divDur)::second => now;
-			spork ~execute(3);
+			while(true) 
+			{
+				sporkTheLoop => now;
+				<<<""recording "", instrument>>>;
+				spork ~ execute(instrument);
+			}
 
-			1::hour => now;
-
-			fun void execute(int type)
+			fun void execute(string type)
 			{
 				<<< ""Record Instrument"", type >>>;
 
 				// 1 measure click-track countdown
-				clickTrackCountdown(type);
+				clickTrackCountdown();
 
 				// record adc input for 1 measure
-				recordADC_F0(type);
+				recordADC_F0();
 
 				// freq->keynum results
 				convertF02KeyNum_AllFrames();
@@ -173,7 +177,7 @@ public class ChuckSoundController : MonoBehaviour {
 
 
 			// ******************************* clickTrackCountdown() *********************************
-			fun void clickTrackCountdown(int type)
+			fun void clickTrackCountdown()
 			{
 				<<<""countdown: "",BEATS_PER_MEAS$int,"" / 4"">>>;
 				for (0 => int i; i < BEATS_PER_MEAS; i++)
@@ -184,7 +188,7 @@ public class ChuckSoundController : MonoBehaviour {
 			}
 
 			// ******************************* recordADC_F0() *********************************
-			fun void recordADC_F0(int type)
+			fun void recordADC_F0()
 			{
 				// for all notes in measure
 				0 => float tmpF0;
@@ -198,12 +202,10 @@ public class ChuckSoundController : MonoBehaviour {
 
 			fun void recordNote(int i)
 			{
-				0 => float tmpF0; 
 				//for all buffer frames in note
 				for (0=>int j; j<freqArr[0].size(); j++)
 				{
-					extractF0() => tmpF0;
-					tmpF0 => freqArr[i][j];
+					extractF0() => freqArr[i][j];
 					(FFT_SIZE*HOP_SIZE)::samp => now;
 				}
 			}
@@ -325,7 +327,7 @@ public class ChuckSoundController : MonoBehaviour {
 			}
 
 			// *********************************** computeMostLikelyKeyNum() **********************
-			fun void computeMostLikelyKeyNum(int type)
+			fun void computeMostLikelyKeyNum(string type)
 			{
 				12 => int octave;
 				13 => int ninth;
@@ -355,7 +357,7 @@ public class ChuckSoundController : MonoBehaviour {
 				}
 				
 				// perform drum beat corrections
-				if(type >= 4) 
+				if(type == ""kick"" || type == ""snare"") 
 				{
 					for (1 => int i; i < midiArr.size(); i++) {
 						if (midiArr[i-1] != 0) {
@@ -382,15 +384,13 @@ public class ChuckSoundController : MonoBehaviour {
 						{
 							0 => midiArr[i];
 						}
-						
-						
-						<<<midiArr[i]>>>;
+						//<<<midiArr[i]>>>;
 					} 
 				}
 			}
 
 			// *********************************** playbackLoopGo() **********************
-			fun void playbackLoopGo(int type)
+			fun void playbackLoopGo(string type)
 			{
 				int thisMidiArr[divsPerMeasure]; // to hold midi note keynums
 				for (0 => int i; i < midiArr.size(); i++)
@@ -399,12 +399,12 @@ public class ChuckSoundController : MonoBehaviour {
 					playSynthesizedMeasure(type, thisMidiArr);
 			}
 
-			fun void playSynthesizedMeasure(int type, int midiArr[])
+			fun void playSynthesizedMeasure(string type, int midiArr[])
 			{
 
 				divDur::second => dur T;
-    
-				if (type==1) {
+				// SYNTH INSTRUMENTS
+				if (type==""tri"") {
 					TriOsc t => ADSR e => r;       
 					0.5 => t.gain;
 					for (0 => int i; i<midiArr.size(); i++)
@@ -416,7 +416,7 @@ public class ChuckSoundController : MonoBehaviour {
 					0.0 => t.gain;
 					t =< e =< r;    
 				}
-				else if (type==2) {
+				else if (type==""sine"") {
 					SinOsc s => ADSR e => r;      
 					1 => s.gain;
 					for (0 => int i; i<midiArr.size(); i++)
@@ -428,7 +428,7 @@ public class ChuckSoundController : MonoBehaviour {
 					0.0 => s.gain; 
 					s =< e =< r;    
 				}
-				else if (type==3) {
+				else if (type==""saw"") {
 					SawOsc w => ADSR e => r;       
 					0.1 => w.gain;
 					for (0 => int i; i<midiArr.size(); i++)
@@ -440,7 +440,8 @@ public class ChuckSoundController : MonoBehaviour {
 					0.0 => w.gain; 
 					w =< e =< r;    
 				}
-				else if (type==4) {
+				// DRUMS
+				else if (type==""kick"") {
 					for (0 => int i; i<midiArr.size(); i++)
 					{
 						if(midiArr[i]>10) 
@@ -452,7 +453,7 @@ public class ChuckSoundController : MonoBehaviour {
 						T => now;
 					}
 				}
-				else if (type==5) {
+				else if (type==""snare"") {
 					for (0 => int i; i<midiArr.size(); i++)
 					{
 						if(midiArr[i]>10) 
@@ -497,8 +498,8 @@ public class ChuckSoundController : MonoBehaviour {
 			}
 		");
 
-        myBeatOnListener1 = gameObject.AddComponent<ChuckEventListener>();
-        myBeatOnListener1.ListenForEvent(myChuck, "notifierOn1", SetInstrumentBeatOn1);
+    	//myInstrumentActivate = gameObject.AddComponent<ChuckEventListener>();
+        //myInstrumentActivate.() //(myChuck, "notifierOn1", SetInstrumentBeatOn1);
 
     }
 

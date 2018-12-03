@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class objSelect : MonoBehaviour {
-
-
-	public Transform chuckSound;
     
     // Use this for initialization
 	void Start () {
@@ -20,13 +17,10 @@ public class objSelect : MonoBehaviour {
 
 	void OnMouseDown() 
 	{
-		string thisObject = GetComponent<SpriteRenderer>().tag;
+        string thisObject = GetComponent<SpriteRenderer>().tag;
         SetHaloRender(true);
         main.currentInstrument = thisObject;
-        if (main.currentInstrument == "kick")
-        {
-            Instantiate(chuckSound, gameObject.transform.position, gameObject.transform.rotation);
-        }
+        Debug.Log(main.currentInstrument);
     }
 
 	void OnMouseUp() 
@@ -39,16 +33,14 @@ public class objSelect : MonoBehaviour {
 	{
         Component halo = gameObject.GetComponent("Halo");
         halo.GetType().GetProperty("enabled").SetValue(halo, state, null);
-        if (state)
-            Debug.Log("in halo set");
+        if (state) {}
 	}
 
     public void SetExternalHaloRender(GameObject gameObject, bool state)
     {
         Component halo = gameObject.GetComponent("Halo");
         halo.GetType().GetProperty("enabled").SetValue(halo, state, null);
-        if (state)
-            Debug.Log("in halo set");
+        if (state) {}
     }
 
 
