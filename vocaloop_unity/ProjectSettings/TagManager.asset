@@ -6,13 +6,16 @@ TagManager:
   tags:
   - adc
   - colorDot
-  - piano
-  - guitar
-  - violin
   - stop
   - play
-  - pink
-  - drum
+  - saw
+  - sine
+  - tri
+  - kick
+  - snare
+  - blackhole
+  - Undefined
+  - chuckSound
   layers:
   - Default
   - TransparentFX

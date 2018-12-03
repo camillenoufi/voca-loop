@@ -36,10 +36,6 @@ if( me.args() ) me.arg(0) => snarefile;
 SndBuf snare => dac;
 snarefile => snare.read; 
 
-
-
-
-
 JCRev r => dac;
 0.1 => r.mix;
  
@@ -77,7 +73,7 @@ second / samp => float SRATE;
 (BEATS_PER_MEAS*DIVS_PER_BEAT) $ int => int divsPerMeasure;
 (SEC_PER_MIN * SRATE) / (DIVS_PER_BEAT * BEATS_PER_MIN) => float samplesPerDiv; //samples per smallest note div
 Math.round( samplesPerDiv / (FFT_SIZE*HOP_SIZE) ) $ int => int numFramesPerDiv;
-<<<numFramesPerDiv>>>;
+//<<<numFramesPerDiv>>>;
 SEC_PER_MIN / (BEATS_PER_MIN * DIVS_PER_BEAT) => float divDur; //duration in seconds of smallest note div
 
 //initialize storage arrays:
@@ -153,7 +149,7 @@ spork ~ execute(3);
 // ******************************* clickTrackCountdown() *********************************
 fun void clickTrackCountdown()
 {
-    <<<"countdown:",BEATS_PER_MEAS$int,"/4">>>;
+    <<<"countdown:",BEATS_PER_MEAS$int,"/ 4">>>;
     for (0 => int i; i<BEATS_PER_MEAS; i++)
     {
         <<< (i+1) >>>; 
@@ -222,9 +218,7 @@ fun float getF0viaCepstrum()
 {
     // to hold frame's fft results
     FFT_SIZE/2 => int CEPST_SIZE;
-    //complex logVals[CEPST_SIZE];
     float logVals[CEPST_SIZE];
-    //float c[CEPST_SIZE];
     complex c[CEPST_SIZE];
     float cr[CEPST_SIZE];
     
@@ -233,32 +227,25 @@ fun float getF0viaCepstrum()
     for( 0 => int i; i < fft.fvals().size(); i++ )
     {
         fft.fval(i) => this_fval;
-        //<<<this_fval>>>;
         Math.pow(this_fval,2) => this_fval; //square it
         Math.log(this_fval) => this_fval; //take the log
-        //<<<this_fval>>>;
-        //this_fval$complex => logVals[i];  //cast to complex for IFFT UAna input
         this_fval => logVals[i];
     }    
     
-    // take IFFT of 1024-point frame and put result into cepstrum array
-    //ifft.transform(logVals);
-    //ifft.samples(c);
+    // take re(FFT) of 1024-point frame and put result into cepstrum array
     fft2.transform(logVals);
     fft2.spectrum(c);
     
     for( 0 => int i; i < c.size(); i++ )
     {
         c[i].re => cr[i];
-        //<<<cr[i]>>>;
     }  
     
     //find peak of cepstrum
     0 => float max; 0 => float abs_c; 0 => int qi; 
     for( 10 => int i; i < cr.size(); i++ ) // indices of sung freq quefrencies 100-1200hz
     {
-        //<<<c[i]>>>;
-        Math.fabs(cr[i]) => abs_c;
+        cr[i] => abs_c;
         if( abs_c > max )
         {
             abs_c => max;
@@ -368,8 +355,6 @@ fun void computeMostLikelyKeyNum(int type)
             {
                 0 => midiArr[i];
             }
-            
-            
             <<<midiArr[i]>>>;
         } 
     } 

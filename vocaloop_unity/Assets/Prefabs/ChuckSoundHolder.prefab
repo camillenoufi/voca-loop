@@ -24,7 +24,7 @@ GameObject:
   - component: {fileID: 114915725423734796}
   m_Layer: 0
   m_Name: ChuckSoundHolder
-  m_TagString: pink
+  m_TagString: chuckSound
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

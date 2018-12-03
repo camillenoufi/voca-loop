@@ -86,6 +86,7 @@
      <Compile Include="Assets\Scripts\instrumentSelect.cs" />
      <Compile Include="Assets\Scripts\main.cs" />
      <Compile Include="Assets\Scripts\objSelect.cs" />
+     <Compile Include="Assets\Scripts\toolSelect.cs" />
      <None Include="Assets\Chunity\2. SETUP and TUTORIALS.txt" />
      <None Include="Assets\Chunity\3. REFERENCE.txt" />
      <None Include="Assets\Chunity\1. INSTALL.txt" />

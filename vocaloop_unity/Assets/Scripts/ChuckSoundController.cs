@@ -7,11 +7,6 @@ public class ChuckSoundController : MonoBehaviour {
 	private ChuckSubInstance myChuck;
     private ChuckFloatSyncer myTempoSyncer;
 	ChuckEventListener myBeatOnListener1;
-    ChuckEventListener myBeatOffListener1;
-    ChuckEventListener myBeatOnListener2;
-    ChuckEventListener myBeatOffListener2;
-    ChuckEventListener myBeatOnListener3;
-    ChuckEventListener myBeatOffListener3;
 	
 	// Use this for initialization
 	void Start () {
@@ -29,14 +24,7 @@ public class ChuckSoundController : MonoBehaviour {
 
     void Update()
     {
-        if(main.destroyLoop) 
-		{
-			Destroy(gameObject);
-		}
-		else 
-		{
-			myTempoSyncer.SetNewValue(main.currentTempo);
-		}
+		myTempoSyncer.SetNewValue(main.currentTempo);
     }
 	
 	void RunChuckInstrument()
@@ -59,17 +47,9 @@ public class ChuckSoundController : MonoBehaviour {
 			// *********************************************************************************
 
 			// constant (input) temporal values driving quantization
-			global Event notifierOn1;
-			global Event notifierOff1;
-			global Event notifierOn2;
-			global Event notifierOff2;
-			global Event notifierOn3;
-			global Event notifierOff3;
-			60 => global float BEATS_PER_MIN; //tempo
-			4 => float BEATS_PER_MEAS; //meter x/4
+			80 => global float BEATS_PER_MIN; //tempo
+			8 => float BEATS_PER_MEAS; //meter x/4
 			4 => float DIVS_PER_BEAT; //4 - 16th note quant, 2 - 8th note quant, etc...
-			60 => float SEC_PER_MIN;
-			<<<BEATS_PER_MIN>>>;
 
 			// *********************************************************************************
 			// ******************* SETUP: INSTRUMENTS ******************************************
@@ -77,6 +57,7 @@ public class ChuckSoundController : MonoBehaviour {
 
 			// connect for synths
 			JCRev r => dac;
+			0.1 => r.mix;
 			
 			// DRUM
 			me.dir() + ""/kick.wav"" => string drumfile;
@@ -84,13 +65,19 @@ public class ChuckSoundController : MonoBehaviour {
 			SndBuf kick => dac;
 			drumfile => kick.read; 
 
+			me.dir() + ""/snare.wav"" => string snarefile;
+			if( me.args() ) me.arg(0) => snarefile; 
+			SndBuf snare => dac;
+			snarefile => snare.read; 
+
+
 			// *********************************************************************************
 			// ******************* SETUP: PITCH DETECTION VARIABLES ****************************
 			// *********************************************************************************
 
 			// analysis
 			adc => PoleZero dcblock => BPF bpf => FFT fft =^ RMS rms => blackhole;
-			IFFT ifft => blackhole;
+			FFT fft2 => blackhole;
 			// set to block DC
 			.99 => dcblock.blockZero;
 
@@ -114,10 +101,11 @@ public class ChuckSoundController : MonoBehaviour {
 			// ***************** SETUP: QUANTIZATION AND PLAYBACK VARIABLES ********************
 
 			// sample and duration calculations
+			60 => float SEC_PER_MIN;
 			(BEATS_PER_MEAS * DIVS_PER_BEAT) $ int => int divsPerMeasure;
 			(SEC_PER_MIN * SRATE) / (DIVS_PER_BEAT * BEATS_PER_MIN) => float samplesPerDiv; //samples per smallest note div
 			Math.round(samplesPerDiv / (FFT_SIZE * HOP_SIZE)) $ int => int numFramesPerDiv;
-			<<< numFramesPerDiv >>>;
+			//<<< numFramesPerDiv >>>;
 			SEC_PER_MIN / (BEATS_PER_MIN * DIVS_PER_BEAT) => float divDur; //duration in seconds of smallest note div
 
 			//initialize storage arrays:
@@ -141,6 +129,20 @@ public class ChuckSoundController : MonoBehaviour {
 			// ***************************** EXECUTION (MAIN) **********************************
 			// *********************************************************************************
 
+			// drums
+			spork ~ execute(5);
+			(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
+			spork ~ execute(4);
+			(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
+			
+			//synth instruments
+			spork ~execute(2);
+			(4*BEATS_PER_MEAS* DIVS_PER_BEAT*divDur)::second => now;
+			spork ~execute(1);
+			(4*BEATS_PER_MEAS* DIVS_PER_BEAT*divDur)::second => now;
+			spork ~execute(3);
+
+			1::hour => now;
 
 			fun void execute(int type)
 			{
@@ -156,23 +158,12 @@ public class ChuckSoundController : MonoBehaviour {
 				convertF02KeyNum_AllFrames();
 
 				// get likely keynum for each note
-				computeMostLikelyKeyNum();
+				computeMostLikelyKeyNum(type);
 
 				// play back results in a loop
 				playbackLoopGo(type);
 
 			}
-
-
-			spork ~ execute(4);
-			(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
-			spork ~execute(2);
-			(4*BEATS_PER_MEAS* DIVS_PER_BEAT*divDur)::second => now;
-			spork ~execute(1);
-			(4*BEATS_PER_MEAS* DIVS_PER_BEAT*divDur)::second => now;
-			spork ~execute(3);
-
-			1::hour => now;
 
 
 
@@ -184,24 +175,11 @@ public class ChuckSoundController : MonoBehaviour {
 			// ******************************* clickTrackCountdown() *********************************
 			fun void clickTrackCountdown(int type)
 			{
-				<<< ""countdown:"" >>>;
+				<<<""countdown: "",BEATS_PER_MEAS$int,"" / 4"">>>;
 				for (0 => int i; i < BEATS_PER_MEAS; i++)
 				{
 					<<< (i + 1) >>>;
-					if(type==1)
-						notifierOn1.broadcast();
-					else if(type==2)
-						notifierOn2.broadcast();
-					else if (type==3)
-						notifierOn3.broadcast();
-					(0.25*DIVS_PER_BEAT * divDur)::second => now;
-					if(type==1)
-						notifierOff1.broadcast();
-					else if(type==2)
-						notifierOff2.broadcast();
-					else if (type==3)
-						notifierOff3.broadcast();
-					(0.75*DIVS_PER_BEAT * divDur)::second => now;
+					(DIVS_PER_BEAT * divDur)::second => now;
 				}
 			}
 
@@ -212,14 +190,21 @@ public class ChuckSoundController : MonoBehaviour {
 				0 => float tmpF0;
 				for (0=>int i; i < freqArr.size(); i++)
 				{
-					//for all buffer frames in note
-					for (0=>int j; j < freqArr[0].size(); j++)
-					{
-						extractF0() => tmpF0;
-						tmpF0 => freqArr[i][j];
-						(FFT_SIZE * HOP_SIZE)::samp => now;
-					}
-					signalBeat(i,type);
+					spork ~ recordNote(i);
+					signalBeat(i);
+					divDur::second => now;
+				}
+			}
+
+			fun void recordNote(int i)
+			{
+				0 => float tmpF0; 
+				//for all buffer frames in note
+				for (0=>int j; j<freqArr[0].size(); j++)
+				{
+					extractF0() => tmpF0;
+					tmpF0 => freqArr[i][j];
+					(FFT_SIZE*HOP_SIZE)::samp => now;
 				}
 			}
 
@@ -259,38 +244,46 @@ public class ChuckSoundController : MonoBehaviour {
 			fun float getF0viaCepstrum()
 			{
 				// to hold frame's fft results
-				FFT_SIZE / 2 => int CEPST_SIZE;
-				complex logVals[CEPST_SIZE];
-				float c[CEPST_SIZE];
-
+				FFT_SIZE/2 => int CEPST_SIZE;
+				float logVals[CEPST_SIZE];
+				complex c[CEPST_SIZE];
+				float cr[CEPST_SIZE];
+				
 				//take the log of the squared magnitude of the fft (already computed to get rms)
 				0 => float this_fval;
-				for (0 => int i; i < fft.fvals().size(); i++)
+				for( 0 => int i; i < fft.fvals().size(); i++ )
 				{
 					fft.fval(i) => this_fval;
-					Math.pow(this_fval, 2) => this_fval; //square it
+					Math.pow(this_fval,2) => this_fval; //square it
 					Math.log(this_fval) => this_fval; //take the log
-					this_fval$complex => logVals[i];  //cast to complex for IFFT UAna input
-				}
-				// take IFFT of 102BEATS_PER_MEAS-point frame and put result into cepstrum array
-				ifft.transform(logVals);
-				ifft.samples(c);
-
-				//find peak of cepstrum
-				0 => float max; 0 => float abs_c; 0 => int quefrency;
-				for (15 => int i; i < c.size(); i++) //start at 15 to ignore filter, keep source
+					this_fval => logVals[i];
+				}    
+				
+				// take re(FFT) of 1024-point frame and put result into cepstrum array
+				fft2.transform(logVals);
+				fft2.spectrum(c);
+				
+				for( 0 => int i; i < c.size(); i++ )
 				{
-					Math.fabs(c[i]) => abs_c;
-					if (abs_c > max)
+					c[i].re => cr[i];
+				}  
+				
+				//find peak of cepstrum
+				0 => float max; 0 => float abs_c; 0 => int qi; 
+				for( 10 => int i; i < cr.size(); i++ ) // indices of sung freq quefrencies 100-1200hz
+				{
+					cr[i] => abs_c;
+					if( abs_c > max )
 					{
 						abs_c => max;
-						i => quefrency;
+						i => qi;
 					}
 				}
 				//<<< quefrency >>>;
-
+				
 				// convert to to frequency
-				SRATE / quefrency$float  => float target_freq;
+				SRATE / qi$float  => float target_freq;
+				//<<<target_freq>>>;
 				return target_freq;
 			}
 
@@ -332,32 +325,67 @@ public class ChuckSoundController : MonoBehaviour {
 			}
 
 			// *********************************** computeMostLikelyKeyNum() **********************
-			fun void computeMostLikelyKeyNum()
+			fun void computeMostLikelyKeyNum(int type)
 			{
+				12 => int octave;
+				13 => int ninth;
+				
 				//for each note in measure
-				for (0 => int i; i < keynumArr.size(); i++)
-				{
-
+				for (0 => int i; i<keynumArr.size(); i++)
+				{ 
+					
 					// count occurences of each keynum value
-					float histogram[128];
+					float histogram[128]; 
 					0 => float mode; 0 => int this_keynum;
-					for (0 => int j; j < keynumArr[0].size(); j++)
-					{
+					for (0 => int j; j < keynumArr[0].size(); j++) {
 						keynumArr[i][j]$int => this_keynum;
-						if (this_keynum < 0)
+						if (this_keynum<15) 
 							0 => this_keynum;
 						histogram[this_keynum] + 1 => histogram[this_keynum];
 						Math.max(mode, histogram[this_keynum]) => mode;
 					}
-
+					
 					// select mode - this is the midi pitch for the note
-					for (0 => int j; j < histogram.size(); j++)
-					{
-						if (histogram[j] == mode)
+					for (0 => int j; j < histogram.size(); j++) {
+						if (histogram[j] == mode) 
 						{
 							j => midiArr[i];
 						}
+					}        
+				}
+				
+				// perform drum beat corrections
+				if(type >= 4) 
+				{
+					for (1 => int i; i < midiArr.size(); i++) {
+						if (midiArr[i-1] != 0) {
+							0 => midiArr[i];
+						}
 					}
+				}
+				// perform pitch corrections
+				else 
+				{
+					for (1 => int i; i < midiArr.size(); i++) {
+						//unison/octave doubling correction
+						if (midiArr[i] == (midiArr[i-1] + octave)) {
+							midiArr[i-1] => midiArr[i]; 
+						}
+						// octave doubling correction following interval change
+						else if ((midiArr[i-1] != 0) && (midiArr[i] >= (midiArr[i-1] + ninth))) {
+							(midiArr[i] - octave) => midiArr[i];
+						}
+						else if (midiArr[i] <= (midiArr[i-1] - ninth)) {
+							(midiArr[i] + octave) => midiArr[i];
+						}
+						if(midiArr[i]<15)
+						{
+							0 => midiArr[i];
+						}
+						
+						
+						<<<midiArr[i]>>>;
+					} 
 				}
 			}
 
@@ -374,44 +402,43 @@ public class ChuckSoundController : MonoBehaviour {
 			fun void playSynthesizedMeasure(int type, int midiArr[])
 			{
 
-				if (type == 1)
-				{
-					TriOsc t => r;
-					.1 => r.mix;
-					0.7 => t.gain;
-					for (0 => int i; i < midiArr.size(); i++)
+				divDur::second => dur T;
+    
+				if (type==1) {
+					TriOsc t => ADSR e => r;       
+					0.5 => t.gain;
+					for (0 => int i; i<midiArr.size(); i++)
 					{
-						Std.mtof(midiArr[i]) => t.freq;
-						divDur::second => now;
+						Std.mtof(midiArr[i]) => t.freq;            
+						spork ~ play(i, T, e, midiArr, [0.2,0.1,0.9,0.0], [0.0,0.0,0.9,0.0], [0.0,0.0,0.9,0.2]); //ADSR onset, sustain, last
+						T => now;
 					}
 					0.0 => t.gain;
-					t =< r;
+					t =< e =< r;    
 				}
-				else if (type == 2)
-				{
-					SinOsc s => r;
-					.1 => r.mix;
-					1.3 => s.gain;
-					for (0 => int i; i < midiArr.size(); i++)
+				else if (type==2) {
+					SinOsc s => ADSR e => r;      
+					1 => s.gain;
+					for (0 => int i; i<midiArr.size(); i++)
 					{
 						Std.mtof(midiArr[i]) => s.freq;
-						divDur::second => now;
+						spork ~ play(i, T, e, midiArr, [0.2,0.1,0.9,0.0], [0.0,0.0,0.9,0.0], [0.0,0.0,0.9,0.3]); //ADSR onset, sustain, last
+						T => now;
 					}
-					0.0 => s.gain;
-					s =< r;
+					0.0 => s.gain; 
+					s =< e =< r;    
 				}
-				else if (type==3)
-				{
-					SawOsc w => r;
-					.1 => r.mix;
-					0.2 => w.gain;
-					for (0 => int i; i < midiArr.size(); i++)
+				else if (type==3) {
+					SawOsc w => ADSR e => r;       
+					0.1 => w.gain;
+					for (0 => int i; i<midiArr.size(); i++)
 					{
 						Std.mtof(midiArr[i]) => w.freq;
-						divDur::second => now;
+						spork ~ play(i, T, e, midiArr, [0.2,0.1,0.9,0.0], [0.0,0.0,0.9,0.0], [0.0,0.0,0.9,0.2]); //ADSR onset, sustain, last
+						T => now;
 					}
-					0.0 => w.gain;
-					w =< r;
+					0.0 => w.gain; 
+					w =< e =< r;    
 				}
 				else if (type==4) {
 					for (0 => int i; i<midiArr.size(); i++)
@@ -419,38 +446,53 @@ public class ChuckSoundController : MonoBehaviour {
 						if(midiArr[i]>10) 
 						{
 							0 => kick.pos;
-							1.2 => kick.gain;
+							1 => kick.gain;
 							1 => kick.rate;
 						}
-
-					divDur::second => now;
+						T => now;
 					}
 				}
+				else if (type==5) {
+					for (0 => int i; i<midiArr.size(); i++)
+					{
+						if(midiArr[i]>10) 
+						{
+							0 => snare.pos;
+							0.8 => snare.gain;
+							1 => snare.rate;
+						}
+						T => now;
+					}
+				}
+			}
 
+			fun void play(int i, dur T, ADSR e, int midiArr[], float on[], float sus[], float last[]) 
+			{
+				//onset of note
+				if ( (i > 0 && (midiArr[i] != midiArr[i-1])) || i==0) {
+					e.set( (on[0]*divDur)::second, (on[1]*divDur)::second, on[2], (on[3]*divDur)::second );  //(a,d,s height % of freq,r)                
+				}
+				//last part of sustained note or last note in measure
+				else if ( ((i<midiArr.size()-1) && (midiArr[i+1] != midiArr[i])) || i==(midiArr.size()-1) ) {
+					e.set( (last[0]*divDur)::second, (last[1]*divDur)::second, last[2], (last[3]*divDur)::second );  //(a,d,s height % of freq,r)    
+				}
+				//sustained note
+				else {
+					e.set( (sus[0]*divDur)::second, (sus[1]*divDur)::second, sus[2], (sus[3]*divDur)::second );  //(a,d,s height % of freq,r)    
+				}            
+				e.keyOn();// press the key
+				T - e.releaseTime() => now; // play/wait until beginning of release
+				e.keyOff(); //release the key
+				e.releaseTime() => now; // wait until release is done
 			}
 
 
 			// *********************************** signalBeat() **********************
-			fun void signalBeat(int i, int type)
+			fun void signalBeat(int i)
 			{
 				if (i % DIVS_PER_BEAT == 0) 
 				{
-					if(type==1)
-						notifierOn1.broadcast();
-					else if(type==2)
-						notifierOn2.broadcast();
-					else if (type==3)
-						notifierOn3.broadcast();
 					<<< ""recording beat:"", (i / DIVS_PER_BEAT + 1)$int >>>;
-				}
-				else if (i % DIVS_PER_BEAT == 1) 
-				{
-					if(type==1)
-						notifierOff1.broadcast();
-					else if(type==2)
-						notifierOff2.broadcast();
-					else if (type==3)
-						notifierOff3.broadcast();
 				}
 			}
 		");
@@ -458,56 +500,10 @@ public class ChuckSoundController : MonoBehaviour {
         myBeatOnListener1 = gameObject.AddComponent<ChuckEventListener>();
         myBeatOnListener1.ListenForEvent(myChuck, "notifierOn1", SetInstrumentBeatOn1);
 
-        myBeatOffListener1 = gameObject.AddComponent<ChuckEventListener>();
-        myBeatOffListener1.ListenForEvent(myChuck, "notifierOff", SetInstrumentBeatOff1);
-
-        myBeatOnListener2 = gameObject.AddComponent<ChuckEventListener>();
-        myBeatOnListener2.ListenForEvent(myChuck, "notifierOn", SetInstrumentBeatOn2);
-
-        myBeatOffListener2 = gameObject.AddComponent<ChuckEventListener>();
-        myBeatOffListener2.ListenForEvent(myChuck, "notifierOff", SetInstrumentBeatOff2);
-
-        myBeatOnListener3 = gameObject.AddComponent<ChuckEventListener>();
-        myBeatOnListener3.ListenForEvent(myChuck, "notifierOn", SetInstrumentBeatOn3);
-
-        myBeatOffListener3 = gameObject.AddComponent<ChuckEventListener>();
-        myBeatOffListener3.ListenForEvent(myChuck, "notifierOff", SetInstrumentBeatOff3);
-
     }
 
     void SetInstrumentBeatOn1()
     {
-        main.guitarFlag = true;
-    }
-
-    void SetInstrumentBeatOff1()
-    {
-        main.guitarFlag = false;
-    }
-
-    void SetInstrumentBeatOn2()
-    {
-        main.pianoFlag = true;
-    }
-
-    void SetInstrumentBeatOff2()
-    {
-        main.pianoFlag = false;
-    }
-
-    void SetInstrumentBeatOn3()
-    {
-        main.violinFlag = true;
-    }
-
-    void SetInstrumentBeatOff3()
-    {
-        main.violinFlag = false;
-    }
-
-    private IEnumerator DestroyChuckSound(float waitTime)
-    {
-        yield return new WaitForSeconds(waitTime);
-        Destroy(gameObject);
+        main.sineFlag = true;
     }
 }

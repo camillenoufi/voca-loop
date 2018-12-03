@@ -8,16 +8,15 @@ public class main : MonoBehaviour {
 
 
     //PUBLIC SCRIPTS
-	public objSelect obj;
+
 
     // PUBLIC VARIABLES FOR OTHER CLASSES TO ACCESS
     public static string currentInstrument = "";
     public static float currentTempo = 80.0f;
 
-    public static bool pianoFlag = false;
-    public static bool guitarFlag = false;
-    public static bool violinFlag = false;
-    public static bool destroyLoop = false;
+    public static bool sineFlag = false;
+    public static bool sawFlag = false;
+    public static bool triFlag = false;
     
 
     //PRIVATE VARIABLES
@@ -46,42 +45,6 @@ public class main : MonoBehaviour {
 	void Update()
 	{
         myTempoSyncer.SetNewValue(main.currentTempo);
-		if(pianoFlag) 
-		{
-			GameObject piano = GameObject.FindGameObjectWithTag("piano");
-			obj.SetExternalHaloRender(piano,true);
-			
-		}
-		else if (!pianoFlag)
-		{
-            GameObject piano = GameObject.FindGameObjectWithTag("piano");
-            obj.SetExternalHaloRender(piano, false);
-		}
-
-        if (guitarFlag)
-        {
-            GameObject guitar = GameObject.FindGameObjectWithTag("guitar");
-            obj.SetExternalHaloRender(guitar, true);
-
-        }
-        else if (!guitarFlag)
-        {
-            GameObject guitar = GameObject.FindGameObjectWithTag("guitar");
-            obj.SetExternalHaloRender(guitar, false);
-        }
-
-        if (violinFlag)
-        {
-            GameObject guitar = GameObject.FindGameObjectWithTag("guitar");
-            obj.SetExternalHaloRender(guitar, true);
-
-        }
-        else if (!violinFlag)
-        {
-            GameObject violin = GameObject.FindGameObjectWithTag("violin");
-            obj.SetExternalHaloRender(violin, false);
-        }
-
 
 	}
 
@@ -92,11 +55,7 @@ public class main : MonoBehaviour {
         // instantiate Chuck Pitch Tracking code
         myChuckTempo.RunCode(@"
 
-			60 => global float BEATS_PER_MIN;
-
-
-			
-			
+			80 => global float BEATS_PER_MIN;
 			
 		");
     }
