@@ -13,12 +13,11 @@ public class main : MonoBehaviour {
     // PUBLIC VARIABLES FOR OTHER CLASSES TO ACCESS
     public static string currentInstrument = "";
     public static float currentTempo = 80.0f;
+    public static int currentBeat = 0, currentMeter = 8;
+    public static bool beatFlag = false, adcFlag = false;
 
-    public static bool sineFlag = false;
-    public static bool sawFlag = false;
-    public static bool triFlag = false;
-    public static bool adcFlag = false;
-    
+    public static bool sineFlag = false, sawFlag = false, triFlag = false;
+    public static Dictionary<string,int> instrumentDict = new Dictionary<string, int>();
 
     //PRIVATE VARIABLES
 	
@@ -32,7 +31,14 @@ public class main : MonoBehaviour {
     // Use this for initialization
     void Start () 
 	{
-		SetUpChuck();
+        //create instrument list
+        instrumentDict.Add("kick",1);
+        instrumentDict.Add("snare",2);
+        instrumentDict.Add("saw",3);
+        instrumentDict.Add("sine",4);
+        instrumentDict.Add("tri",5);
+        
+        SetUpChuck();
         Instantiate(chuckSound, gameObject.transform.position, gameObject.transform.rotation);
 	}
 	

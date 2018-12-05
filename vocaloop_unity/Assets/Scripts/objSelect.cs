@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class objSelect : MonoBehaviour {
+
+    //public static Color instrumentColor = new Color(190f, 98f, 103f);
     
     // Use this for initialization
 	void Start () {

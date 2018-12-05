@@ -6,8 +6,8 @@ public class ChuckSoundController : MonoBehaviour {
 	
 	private ChuckSubInstance myChuck;
     private ChuckFloatSyncer myTempoSyncer;
-	private ChuckStringSyncer myInstrumentSyncer;
-	//ChuckEventListener myInstrumentActivate;
+	private ChuckIntSyncer myInstrumentSyncer;
+	ChuckEventListener myBeatNotifier;
 	
 	// Use this for initialization
 	void Start () {
@@ -20,17 +20,17 @@ public class ChuckSoundController : MonoBehaviour {
 	{
         myTempoSyncer = gameObject.AddComponent<ChuckFloatSyncer>();
         myTempoSyncer.SyncFloat(myChuck, "BEATS_PER_MIN"); //current instance of chuck is determining pos value
-		myInstrumentSyncer = gameObject.AddComponent<ChuckStringSyncer>();
-		myInstrumentSyncer.SyncString(myChuck, "instrument");
+		myInstrumentSyncer = gameObject.AddComponent<ChuckIntSyncer>();
+		myInstrumentSyncer.SyncInt(myChuck, "instrument");
     }
 
     void Update()
     {
 		myTempoSyncer.SetNewValue(main.currentTempo);
 		if (main.adcFlag && main.currentInstrument!="") {
-            myInstrumentSyncer.SetNewValue(main.currentInstrument);
+            myInstrumentSyncer.SetNewValue(main.instrumentDict[main.currentInstrument]);
             myChuck.BroadcastEvent("sporkTheLoop");
-            //Debug.Log(myInstrumentSyncer.GetCurrentValue());
+            Debug.Log(myInstrumentSyncer.GetCurrentValue());
             main.adcFlag = false;
 		}
     }
@@ -55,15 +55,16 @@ public class ChuckSoundController : MonoBehaviour {
 			// *********************************************************************************
 
 			// constant (input) temporal values driving quantization
+			global Event beatNotifier;
 			80 => global float BEATS_PER_MIN; //tempo
-			8 => float BEATS_PER_MEAS; //meter x/4
+			8 => global float BEATS_PER_MEAS; //meter x/4
 			4 => float DIVS_PER_BEAT; //4 - 16th note quant, 2 - 8th note quant, etc...
 
 			// *********************************************************************************
 			// ******************* SETUP: INSTRUMENTS ******************************************
 			// *********************************************************************************
 
-			""kick"" => global string instrument;
+			1 => global int instrument;
 			global Event sporkTheLoop;
 			
 			// connect for synths
@@ -144,11 +145,10 @@ public class ChuckSoundController : MonoBehaviour {
 			while(true) 
 			{
 				sporkTheLoop => now;
-				<<<""recording "", instrument>>>;
 				spork ~ execute(instrument);
 			}
 
-			fun void execute(string type)
+			fun void execute(int type)
 			{
 				<<< ""Record Instrument"", type >>>;
 
@@ -179,9 +179,10 @@ public class ChuckSoundController : MonoBehaviour {
 			// ******************************* clickTrackCountdown() *********************************
 			fun void clickTrackCountdown()
 			{
-				<<<""countdown: "",BEATS_PER_MEAS$int,"" / 4"">>>;
+				//<<<""countdown: "",BEATS_PER_MEAS$int,"" / 4"">>>;
 				for (0 => int i; i < BEATS_PER_MEAS; i++)
 				{
+					beatNotifier.broadcast();
 					<<< (i + 1) >>>;
 					(DIVS_PER_BEAT * divDur)::second => now;
 				}
@@ -327,7 +328,7 @@ public class ChuckSoundController : MonoBehaviour {
 			}
 
 			// *********************************** computeMostLikelyKeyNum() **********************
-			fun void computeMostLikelyKeyNum(string type)
+			fun void computeMostLikelyKeyNum(int type)
 			{
 				12 => int octave;
 				13 => int ninth;
@@ -357,7 +358,7 @@ public class ChuckSoundController : MonoBehaviour {
 				}
 				
 				// perform drum beat corrections
-				if(type == ""kick"" || type == ""snare"") 
+				if(type == 1 || type == 2) 
 				{
 					for (1 => int i; i < midiArr.size(); i++) {
 						if (midiArr[i-1] != 0) {
@@ -390,7 +391,7 @@ public class ChuckSoundController : MonoBehaviour {
 			}
 
 			// *********************************** playbackLoopGo() **********************
-			fun void playbackLoopGo(string type)
+			fun void playbackLoopGo(int type)
 			{
 				int thisMidiArr[divsPerMeasure]; // to hold midi note keynums
 				for (0 => int i; i < midiArr.size(); i++)
@@ -399,12 +400,12 @@ public class ChuckSoundController : MonoBehaviour {
 					playSynthesizedMeasure(type, thisMidiArr);
 			}
 
-			fun void playSynthesizedMeasure(string type, int midiArr[])
+			fun void playSynthesizedMeasure(int type, int midiArr[])
 			{
 
 				divDur::second => dur T;
 				// SYNTH INSTRUMENTS
-				if (type==""tri"") {
+				if (type==5) {
 					TriOsc t => ADSR e => r;       
 					0.5 => t.gain;
 					for (0 => int i; i<midiArr.size(); i++)
@@ -416,7 +417,7 @@ public class ChuckSoundController : MonoBehaviour {
 					0.0 => t.gain;
 					t =< e =< r;    
 				}
-				else if (type==""sine"") {
+				else if (type==4) {
 					SinOsc s => ADSR e => r;      
 					1 => s.gain;
 					for (0 => int i; i<midiArr.size(); i++)
@@ -428,7 +429,7 @@ public class ChuckSoundController : MonoBehaviour {
 					0.0 => s.gain; 
 					s =< e =< r;    
 				}
-				else if (type==""saw"") {
+				else if (type==3) {
 					SawOsc w => ADSR e => r;       
 					0.1 => w.gain;
 					for (0 => int i; i<midiArr.size(); i++)
@@ -441,7 +442,7 @@ public class ChuckSoundController : MonoBehaviour {
 					w =< e =< r;    
 				}
 				// DRUMS
-				else if (type==""kick"") {
+				else if (type==1) {
 					for (0 => int i; i<midiArr.size(); i++)
 					{
 						if(midiArr[i]>10) 
@@ -453,7 +454,7 @@ public class ChuckSoundController : MonoBehaviour {
 						T => now;
 					}
 				}
-				else if (type==""snare"") {
+				else if (type==2) {
 					for (0 => int i; i<midiArr.size(); i++)
 					{
 						if(midiArr[i]>10) 
@@ -493,18 +494,20 @@ public class ChuckSoundController : MonoBehaviour {
 			{
 				if (i % DIVS_PER_BEAT == 0) 
 				{
+					beatNotifier.broadcast();
 					<<< ""recording beat:"", (i / DIVS_PER_BEAT + 1)$int >>>;
 				}
 			}
 		");
 
-    	//myInstrumentActivate = gameObject.AddComponent<ChuckEventListener>();
-        //myInstrumentActivate.() //(myChuck, "notifierOn1", SetInstrumentBeatOn1);
+    	myBeatNotifier = gameObject.AddComponent<ChuckEventListener>();
+        myBeatNotifier.ListenForEvent(myChuck, "beatNotifier", DisplayBeat);
 
     }
 
-    void SetInstrumentBeatOn1()
+    void DisplayBeat()
     {
-        main.sineFlag = true;
+		main.beatFlag = true;
+		main.currentBeat = main.currentBeat%main.currentMeter + 1;
     }
 }

@@ -82,11 +82,11 @@
      <Compile Include="Assets\Chunity\Scripts\Utility\ChuckIntSyncer.cs" />
      <Compile Include="Assets\Chunity\Scripts\Utility\ChuckStringSyncer.cs" />
      <Compile Include="Assets\Chunity\Scripts\Utility\TheChuck.cs" />
+     <Compile Include="Assets\Scripts\adcSelect.cs" />
      <Compile Include="Assets\Scripts\ChuckSoundController.cs" />
-     <Compile Include="Assets\Scripts\instrumentSelect.cs" />
+     <Compile Include="Assets\Scripts\dotControl.cs" />
      <Compile Include="Assets\Scripts\main.cs" />
      <Compile Include="Assets\Scripts\objSelect.cs" />
-     <Compile Include="Assets\Scripts\toolSelect.cs" />
      <None Include="Assets\Chunity\2. SETUP and TUTORIALS.txt" />
      <None Include="Assets\Chunity\3. REFERENCE.txt" />
      <None Include="Assets\Chunity\1. INSTALL.txt" />
