@@ -8,7 +8,8 @@ public class ChuckSoundController : MonoBehaviour {
 	private ChuckSubInstance myChuckTempo;
     private ChuckFloatSyncer myMetronomeSyncer;
     ChuckEventListener myMetronomeNotifier;
-	private bool globalBeatFlag = false, sporkWaiting = false;
+	public static bool globalBeatFlag = false; 
+	bool sporkWaiting = false;
 	
 	//Chuck Instrument
 	private ChuckSubInstance myChuck;
@@ -81,7 +82,6 @@ public class ChuckSoundController : MonoBehaviour {
 
 	void BroadcastBeat()
 	{
-		Debug.Log("beat");
 		globalBeatFlag = true;
         StartCoroutine(StopBroadcast());
 	}

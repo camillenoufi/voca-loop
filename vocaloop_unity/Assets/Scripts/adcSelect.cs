@@ -43,26 +43,24 @@ public class adcSelect : MonoBehaviour
 
     void OnMouseDown()
     {
-        string thisObject = gameObject.tag;
         SetHaloRender(true);
-        if (thisObject == "adc")
+        main.adcFlag = true;
+        Debug.Log("adc selected");
+        if(main.currentInstrument == "saw" || main.currentInstrument == "sine" || main.currentInstrument == "tri") 
         {
-            main.adcFlag = true;
-            Debug.Log("adc selected");
-            if(main.currentInstrument == "saw" || main.currentInstrument == "sine" || main.currentInstrument == "tri") 
-            {
-                InstantiateLoopDot(main.currentInstrument);
-            }
-            else //drums
-            {
-                Debug.Log("adc for drums");
-            }
+            StartCoroutine(SyncLoopWithMetronome());
         }
-        if (thisObject == "stop")
+        else //drums
         {
-            Debug.Log("destroying");
-            Destroy(GameObject.FindGameObjectWithTag("chuckSound"));
+            Debug.Log("adc for drums");
         }
+    }
+
+    private IEnumerator SyncLoopWithMetronome()
+    {
+        yield return new WaitUntil(() => ChuckSoundController.globalBeatFlag == true);
+        InstantiateLoopDot(main.currentInstrument);
+
     }
 
     void InstantiateLoopDot(string objectTag)
