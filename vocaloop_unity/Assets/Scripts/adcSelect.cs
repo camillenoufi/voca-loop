@@ -47,9 +47,17 @@ public class adcSelect : MonoBehaviour
         if (thisObject == "adc")
         {
             main.adcFlag = true;
-            Debug.Log(main.currentInstrument);
             Debug.Log("adc selected");
-            //Instantiate()
+
+            if(main.currentInstrument == "saw" || main.currentInstrument == "sine" || main.currentInstrument == "tri") 
+            {
+                Vector3 position = new Vector3(main.xL, Random.Range(main.yB+10, main.yT), -1);
+                Instantiate(loopDot, position, Quaternion.identity);
+            }
+            else //drums
+            {
+                Debug.Log("adc for drums");
+            }
         }
         if (thisObject == "stop")
         {

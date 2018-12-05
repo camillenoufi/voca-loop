@@ -18,6 +18,10 @@ public class main : MonoBehaviour {
 
     public static bool sineFlag = false, sawFlag = false, triFlag = false;
     public static Dictionary<string,int> instrumentDict = new Dictionary<string, int>();
+    public static float xL = -50f;
+    public static float xR = 50f;
+    public static float yT = 25f;
+    public static float yB = -25f;
 
     //PRIVATE VARIABLES
 	
