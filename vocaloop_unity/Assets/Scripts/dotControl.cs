@@ -18,8 +18,6 @@ public class dotControl : MonoBehaviour {
         InitializeComponents();
         InitializePositionVars();
         boolean = Mathf.RoundToInt(Random.Range(1, 10)) % 2;
-        Debug.Log(gameObject.tag);
-        Debug.Log(gameObject.GetComponent<SpriteRenderer>().color);
     }
 
     void InitializeComponents()

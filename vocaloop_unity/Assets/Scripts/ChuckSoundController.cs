@@ -3,7 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class ChuckSoundController : MonoBehaviour {
+
+	//Chuck Metronome
+	private ChuckSubInstance myChuckTempo;
+    private ChuckFloatSyncer myMetronomeSyncer;
+    ChuckEventListener myMetronomeNotifier;
+	private bool globalBeatFlag = false, sporkWaiting = false;
 	
+	//Chuck Instrument
 	private ChuckSubInstance myChuck;
     private ChuckFloatSyncer myTempoSyncer;
 	private ChuckFloatSyncer myMeterSyncer;
@@ -14,12 +21,18 @@ public class ChuckSoundController : MonoBehaviour {
 	void Start () {
         myChuck = GetComponent<ChuckSubInstance>();
 		SetChuckVars();
+        StartChuckMetronome(myChuckTempo);
         RunChuckInstrument();
 	}
 
 	void SetChuckVars()
 	{
-        myTempoSyncer = gameObject.AddComponent<ChuckFloatSyncer>();
+        //metronome
+        myChuckTempo = GetComponent<ChuckSubInstance>();
+        myMetronomeSyncer = gameObject.AddComponent<ChuckFloatSyncer>();
+        myMetronomeSyncer.SyncFloat(myChuckTempo, "BEATS_PER_MIN"); //current instance of chuck is determining pos value
+		//instruments
+		myTempoSyncer = gameObject.AddComponent<ChuckFloatSyncer>();
         myTempoSyncer.SyncFloat(myChuck, "BEATS_PER_MIN"); //current instance of chuck is determining pos value
         myMeterSyncer = gameObject.AddComponent<ChuckFloatSyncer>();
         myMeterSyncer.SyncFloat(myChuck, "BEATS_PER_MEAS"); //current instance of chuck is determining pos value
@@ -29,14 +42,54 @@ public class ChuckSoundController : MonoBehaviour {
 
     void Update()
     {
+        myMetronomeSyncer.SetNewValue(main.currentTempo);
 		myTempoSyncer.SetNewValue(main.currentTempo);
 		myMeterSyncer.SetNewValue((float)main.currentMeter);
-		if (main.adcFlag && main.currentInstrument!="") {
-            myInstrumentSyncer.SetNewValue(main.instrumentDict[main.currentInstrument]);
-            myChuck.BroadcastEvent("sporkTheLoop");
-            Debug.Log(myInstrumentSyncer.GetCurrentValue());
-            main.adcFlag = false;
+		if (main.adcFlag && main.currentInstrument!="" && !sporkWaiting) {
+            StartCoroutine(SyncLoopWithMetronome());
 		}
+    }
+
+    private IEnumerator SyncLoopWithMetronome()
+    {
+		sporkWaiting = true;
+		yield return new WaitUntil(() => globalBeatFlag==true);
+        myInstrumentSyncer.SetNewValue(main.instrumentDict[main.currentInstrument]);
+        myChuck.BroadcastEvent("sporkTheLoop");
+        main.adcFlag = false;
+		sporkWaiting = false;
+        
+    }
+
+    void StartChuckMetronome(ChuckSubInstance myChuckTempo)
+    {
+        // instantiate Chuck Pitch Tracking code
+        myChuckTempo.RunCode(@"
+
+			80 => global float BEATS_PER_MIN;
+			global Event mtrNotifier;
+			while(true) 
+			{
+				mtrNotifier.broadcast();
+				(60/BEATS_PER_MIN)::second => now;
+			}
+		");
+
+        myMetronomeNotifier = gameObject.AddComponent<ChuckEventListener>();
+        myMetronomeNotifier.ListenForEvent(myChuckTempo, "mtrNotifier", BroadcastBeat);
+    }
+
+	void BroadcastBeat()
+	{
+		Debug.Log("beat");
+		globalBeatFlag = true;
+        StartCoroutine(StopBroadcast());
+	}
+
+    private IEnumerator StopBroadcast()
+    {
+        yield return new WaitForSeconds(1/16*60/main.currentTempo);
+		globalBeatFlag = false;
     }
 	
 	void RunChuckInstrument()

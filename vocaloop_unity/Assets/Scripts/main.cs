@@ -29,8 +29,7 @@ public class main : MonoBehaviour {
 	
 
     // Chuck stuff
-    private ChuckSubInstance myChuckTempo;
-    private ChuckFloatSyncer myTempoSyncer;
+    
 
 
 
@@ -44,34 +43,17 @@ public class main : MonoBehaviour {
         instrumentDict.Add("sine",4);
         instrumentDict.Add("tri",5);
         
-        SetUpChuck();
         Instantiate(chuckSound, gameObject.transform.position, gameObject.transform.rotation);
 	}
-	
-	void SetUpChuck()
-	{
-		myChuckTempo = GetComponent<ChuckSubInstance>();
-        myTempoSyncer = gameObject.AddComponent<ChuckFloatSyncer>();
-        myTempoSyncer.SyncFloat(myChuckTempo, "BEATS_PER_MIN"); //current instance of chuck is determining pos value
-		StartChuckMetronome(myChuckTempo);
-	}
+
 
 	void Update()
 	{
-        myTempoSyncer.SetNewValue(currentTempo);
-        bpm.text = currentTempo.ToString();
+        bpm.text = currentTempo.ToString() + " BPM";
 
 	}
 
 
     // ChucK pitch tracking script contained here
-    void StartChuckMetronome(ChuckSubInstance myChuckTempo)
-    {
-        // instantiate Chuck Pitch Tracking code
-        myChuckTempo.RunCode(@"
-
-			80 => global float BEATS_PER_MIN;
-			
-		");
-    }
+    
 }
