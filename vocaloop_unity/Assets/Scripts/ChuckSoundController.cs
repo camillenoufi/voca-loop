@@ -6,6 +6,7 @@ public class ChuckSoundController : MonoBehaviour {
 	
 	private ChuckSubInstance myChuck;
     private ChuckFloatSyncer myTempoSyncer;
+	private ChuckFloatSyncer myMeterSyncer;
 	private ChuckIntSyncer myInstrumentSyncer;
 	ChuckEventListener myBeatNotifier;
 	
@@ -20,13 +21,16 @@ public class ChuckSoundController : MonoBehaviour {
 	{
         myTempoSyncer = gameObject.AddComponent<ChuckFloatSyncer>();
         myTempoSyncer.SyncFloat(myChuck, "BEATS_PER_MIN"); //current instance of chuck is determining pos value
-		myInstrumentSyncer = gameObject.AddComponent<ChuckIntSyncer>();
+        myMeterSyncer = gameObject.AddComponent<ChuckFloatSyncer>();
+        myMeterSyncer.SyncFloat(myChuck, "BEATS_PER_MEAS"); //current instance of chuck is determining pos value
+        myInstrumentSyncer = gameObject.AddComponent<ChuckIntSyncer>();
 		myInstrumentSyncer.SyncInt(myChuck, "instrument");
     }
 
     void Update()
     {
 		myTempoSyncer.SetNewValue(main.currentTempo);
+		myMeterSyncer.SetNewValue((float)main.currentMeter);
 		if (main.adcFlag && main.currentInstrument!="") {
             myInstrumentSyncer.SetNewValue(main.instrumentDict[main.currentInstrument]);
             myChuck.BroadcastEvent("sporkTheLoop");
@@ -508,6 +512,5 @@ public class ChuckSoundController : MonoBehaviour {
     void DisplayBeat()
     {
 		main.beatFlag = true;
-		main.currentBeat = main.currentBeat%main.currentMeter + 1;
     }
 }

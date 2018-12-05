@@ -1,11 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class main : MonoBehaviour {
 
     // PUBLIC EDITABLE VARIABLES (in unity editor)
     public Transform chuckSound;
+    public Text bpm; 
 
     //PUBLIC SCRIPTS
 
@@ -56,7 +58,8 @@ public class main : MonoBehaviour {
 
 	void Update()
 	{
-        myTempoSyncer.SetNewValue(main.currentTempo);
+        myTempoSyncer.SetNewValue(currentTempo);
+        bpm.text = currentTempo.ToString();
 
 	}
 

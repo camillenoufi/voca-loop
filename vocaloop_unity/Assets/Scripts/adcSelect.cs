@@ -22,6 +22,7 @@ public class adcSelect : MonoBehaviour
     {
         if (main.beatFlag)
         {
+            main.currentBeat = main.currentBeat % main.currentMeter + 1;
             DisplayBeat();
         }
     }
@@ -42,17 +43,15 @@ public class adcSelect : MonoBehaviour
 
     void OnMouseDown()
     {
-        string thisObject = GetComponent<SpriteRenderer>().tag;
+        string thisObject = gameObject.tag;
         SetHaloRender(true);
         if (thisObject == "adc")
         {
             main.adcFlag = true;
             Debug.Log("adc selected");
-
             if(main.currentInstrument == "saw" || main.currentInstrument == "sine" || main.currentInstrument == "tri") 
             {
-                Vector3 position = new Vector3(main.xL, Random.Range(main.yB+10, main.yT), -1);
-                Instantiate(loopDot, position, Quaternion.identity);
+                InstantiateLoopDot(main.currentInstrument);
             }
             else //drums
             {
@@ -64,6 +63,14 @@ public class adcSelect : MonoBehaviour
             Debug.Log("destroying");
             Destroy(GameObject.FindGameObjectWithTag("chuckSound"));
         }
+    }
+
+    void InstantiateLoopDot(string objectTag)
+    {
+        Vector3 position = new Vector3(main.xL, Random.Range(main.yB + 10, main.yT - 5), 1);
+        loopDot.tag = objectTag;
+        loopDot.GetComponent<SpriteRenderer>().color = (GameObject.Find(main.currentInstrument)).GetComponent<SpriteRenderer>().color;
+        Instantiate(loopDot, position, Quaternion.identity);
     }
 
     void OnMouseUp()
