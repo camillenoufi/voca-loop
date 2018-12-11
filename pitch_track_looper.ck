@@ -38,6 +38,108 @@ snarefile => snare.read;
 
 JCRev r => dac;
 0.1 => r.mix;
+
+// *********************************************************************************
+// ******************* SETUP: GAMETRAK ******************************************
+// *********************************************************************************
+
+// z axis deadzone
+.032 => float DEADZONE;
+// which joystick
+0 => int device;
+// get from command line
+if( me.args() ) me.arg(0) => Std.atoi => device;
+
+// gametrak class
+class GameTrak
+{
+    // timestamps
+    time lastTime;
+    time currTime;
+    
+    // previous axis data
+    float lastAxis[6];
+    // current axis data
+    float axis[6];
+}
+
+// instantiate an instance of class
+GameTrak gt;
+// HID objects
+Hid trak;
+HidMsg msg;
+// open joystick 0, exit on fail
+if( !trak.openJoystick( device ) ) me.exit();
+// print
+<<< "joystick '" + trak.name() + "' ready", "" >>>;
+
+// spork control
+spork ~ gametrak();
+// print
+//spork ~ print();
+
+fun void print()
+{
+    while( true )
+    {
+        // values
+        <<< "axes:", gt.axis[0],gt.axis[1],gt.axis[2], gt.axis[3],gt.axis[4],gt.axis[5] >>>;
+        100::ms => now;
+    }
+}
+
+// gametrack handling
+fun void gametrak()
+{
+    while( true )
+    {
+        // wait on HidIn as event
+        trak => now;
+        
+        // messages received
+        while( trak.recv( msg ) )
+        {
+            // joystick axis motion
+            if( msg.isAxisMotion() )
+            {            
+                // check which
+                if( msg.which >= 0 && msg.which < 6 )
+                {
+                    // check if fresh
+                    if( now > gt.currTime )
+                    {
+                        // time stamp
+                        gt.currTime => gt.lastTime;
+                        // set
+                        now => gt.currTime;
+                    }
+                    // save last
+                    gt.axis[msg.which] => gt.lastAxis[msg.which];
+                    // the z axes map to [0,1], others map to [-1,1]
+                    if( msg.which != 2 && msg.which != 5 )
+                    { msg.axisPosition => gt.axis[msg.which]; }
+                    else
+                    {
+                        1 - ((msg.axisPosition + 1) / 2) - DEADZONE => gt.axis[msg.which];
+                        if( gt.axis[msg.which] < 0 ) 0 => gt.axis[msg.which];
+                    }
+                }
+            }
+            
+            // joystick button down
+            else if( msg.isButtonDown() )
+            {
+                <<< "button", msg.which, "down" >>>;
+            }
+            
+            // joystick button up
+            else if( msg.isButtonUp() )
+            {
+                <<< "button", msg.which, "up" >>>;
+            }
+        }
+    }
+}
  
  
 // *********************************************************************************
@@ -120,18 +222,24 @@ fun void execute(int type)
 }
 
 
+//synths
+spork ~ execute(2);
+(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
+spork ~ execute(2);
+(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
+spork ~ execute(1);
+(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
+spork ~ execute(1);
+(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
+spork ~ execute(3);
+(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
+spork ~ execute(3);
+(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
+
 //drums
 spork ~ execute(4);
 (4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
 spork ~ execute(5);
-(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
-
-//synths
-spork ~ execute(1);
-(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
-spork ~ execute(2);
-(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
-spork ~ execute(3);
 
 //sampled instruments
 
@@ -376,11 +484,13 @@ fun void playSynthesizedMeasure(int type, int midiArr[])
     
     if (type==1) {
         TriOsc t => ADSR e => r;       
-        0.5 => t.gain;
+        //0.5 => t.gain;
+        (gt.axis[0] + 1.0) / 4.0 => t.gain; //left right
+        //gt.axis[1] => r.mix;
         for (0 => int i; i<midiArr.size(); i++)
         {
             Std.mtof(midiArr[i]) => t.freq;            
-            spork ~ play(i, T, e, midiArr, [0.2,0.1,0.9,0.0], [0.0,0.0,0.9,0.0], [0.0,0.0,0.9,0.2]); //ADSR onset, sustain, last
+            spork ~ play(i, T, e, midiArr, [0.3,0.2,0.9,0.0], [0.0,0.0,0.9,0.0], [0.0,0.0,0.9,0.2]); //ADSR onset, sustain, last
             T => now;
         }
         0.0 => t.gain;
@@ -389,10 +499,11 @@ fun void playSynthesizedMeasure(int type, int midiArr[])
     else if (type==2) {
         SinOsc s => ADSR e => r;      
         1 => s.gain;
+        (gt.axis[1] + 1.0) / 2.0 => s.gain; //front and back
         for (0 => int i; i<midiArr.size(); i++)
         {
             Std.mtof(midiArr[i]) => s.freq;
-            spork ~ play(i, T, e, midiArr, [0.2,0.1,0.9,0.0], [0.0,0.0,0.9,0.0], [0.0,0.0,0.9,0.3]); //ADSR onset, sustain, last
+            spork ~ play(i, T, e, midiArr, [0.3,0.2,0.9,0.0], [0.0,0.0,0.9,0.0], [0.0,0.0,0.9,0.3]); //ADSR onset, sustain, last
             T => now;
         }
         0.0 => s.gain; 
@@ -401,6 +512,8 @@ fun void playSynthesizedMeasure(int type, int midiArr[])
     else if (type==3) {
         SawOsc w => ADSR e => r;       
         0.1 => w.gain;
+        ((gt.axis[2] + 1.0) / 8.0) - 1.0/16.0 => w.gain;
+        <<<(gt.axis[2] + 1.0) / 8.0>>>;
         for (0 => int i; i<midiArr.size(); i++)
         {
             Std.mtof(midiArr[i]) => w.freq;
@@ -428,7 +541,7 @@ fun void playSynthesizedMeasure(int type, int midiArr[])
             if(midiArr[i]>10) 
             {
                 0 => snare.pos;
-                0.8 => snare.gain;
+                1 => snare.gain;
                 1 => snare.rate;
             }
             T => now;
