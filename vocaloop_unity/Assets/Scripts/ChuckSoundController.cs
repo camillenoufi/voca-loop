@@ -13,10 +13,10 @@ public class ChuckSoundController : MonoBehaviour {
 	
 	//Chuck Instrument
 	private ChuckSubInstance myChuck;
-    private ChuckFloatSyncer myTempoSyncer;
-	private ChuckFloatSyncer myMeterSyncer;
+    private ChuckFloatSyncer myTempoSyncer, myMeterSyncer;
 	private ChuckIntSyncer myInstrumentSyncer;
-	ChuckEventListener myBeatNotifier;
+	ChuckEventListener myBeatNotifier, myCountdownNotifier, myRecordNotifier, myRecordOffNotifier, mySnareNotifier, myKickNotifier;
+	
 	
 	// Use this for initialization
 	void Start () {
@@ -112,7 +112,7 @@ public class ChuckSoundController : MonoBehaviour {
 			// *********************************************************************************
 
 			// constant (input) temporal values driving quantization
-			global Event beatNotifier;
+			global Event beatNotifier, countdownNotifier, recordNotifier, recordOffNotifier, kickNotifier, snareNotifier;
 			80 => global float BEATS_PER_MIN; //tempo
 			8 => global float BEATS_PER_MEAS; //meter x/4
 			4 => float DIVS_PER_BEAT; //4 - 16th note quant, 2 - 8th note quant, etc...
@@ -139,6 +139,109 @@ public class ChuckSoundController : MonoBehaviour {
 			if( me.args() ) me.arg(0) => snarefile; 
 			SndBuf snare => dac;
 			snarefile => snare.read; 
+
+			// *********************************************************************************
+			// ******************* SETUP: GAMETRAK ******************************************
+			// *********************************************************************************
+
+			// z axis deadzone
+			.032 => float DEADZONE;
+			// which joystick
+			0 => int device;
+			// get from command line
+			if( me.args() ) me.arg(0) => Std.atoi => device;
+
+			// gametrak class
+			class GameTrak
+			{
+				// timestamps
+				time lastTime;
+				time currTime;
+				
+				// previous axis data
+				float lastAxis[6];
+				// current axis data
+				float axis[6];
+			}
+
+			// instantiate an instance of class
+			GameTrak gt;
+			// HID objects
+			Hid trak;
+			HidMsg msg;
+			// open joystick 0, exit on fail
+			if( !trak.openJoystick( device ) ) me.exit();
+			// print
+			<<< ""joystick "" + trak.name() + "" ready"", """" >>>;
+
+			// spork control
+			spork ~ gametrak();
+			// print
+			//spork ~ print();
+
+			fun void print()
+			{
+				while( true )
+				{
+					// values
+					<<< ""axes:"", gt.axis[0],gt.axis[1],gt.axis[2], gt.axis[3],gt.axis[4],gt.axis[5] >>>;
+					100::ms => now;
+				}
+			}
+
+			// gametrack handling
+			fun void gametrak()
+			{
+				while( true )
+				{
+					// wait on HidIn as event
+					trak => now;
+					
+					// messages received
+					while( trak.recv( msg ) )
+					{
+						// joystick axis motion
+						if( msg.isAxisMotion() )
+						{            
+							// check which
+							if( msg.which >= 0 && msg.which < 6 )
+							{
+								// check if fresh
+								if( now > gt.currTime )
+								{
+									// time stamp
+									gt.currTime => gt.lastTime;
+									// set
+									now => gt.currTime;
+								}
+								// save last
+								gt.axis[msg.which] => gt.lastAxis[msg.which];
+								// the z axes map to [0,1], others map to [-1,1]
+								if( msg.which != 2 && msg.which != 5 )
+								{ msg.axisPosition => gt.axis[msg.which]; }
+								else
+								{
+									1 - ((msg.axisPosition + 1) / 2) - DEADZONE => gt.axis[msg.which];
+									if( gt.axis[msg.which] < 0 ) 0 => gt.axis[msg.which];
+								}
+							}
+						}
+						
+						// joystick button down
+						else if( msg.isButtonDown() )
+						{
+							<<< ""button"", msg.which, ""down"" >>>;
+						}
+						
+						// joystick button up
+						else if( msg.isButtonUp() )
+						{
+							<<< ""button"", msg.which, ""up"" >>>;
+						}
+					}
+				}
+			}
+
 
 
 			// *********************************************************************************
@@ -236,7 +339,7 @@ public class ChuckSoundController : MonoBehaviour {
 			// ******************************* clickTrackCountdown() *********************************
 			fun void clickTrackCountdown()
 			{
-				//<<<""countdown: "",BEATS_PER_MEAS$int,"" / 4"">>>;
+				countdownNotifier.broadcast();
 				for (0 => int i; i < BEATS_PER_MEAS; i++)
 				{
 					beatNotifier.broadcast();
@@ -248,6 +351,7 @@ public class ChuckSoundController : MonoBehaviour {
 			// ******************************* recordADC_F0() *********************************
 			fun void recordADC_F0()
 			{
+				recordNotifier.broadcast();
 				// for all notes in measure
 				0 => float tmpF0;
 				for (0=>int i; i < freqArr.size(); i++)
@@ -256,6 +360,7 @@ public class ChuckSoundController : MonoBehaviour {
 					signalBeat(i);
 					divDur::second => now;
 				}
+				recordOffNotifier.broadcast();
 			}
 
 			fun void recordNote(int i)
@@ -464,7 +569,8 @@ public class ChuckSoundController : MonoBehaviour {
 				// SYNTH INSTRUMENTS
 				if (type==5) {
 					TriOsc t => ADSR e => r;       
-					0.5 => t.gain;
+					//0.5 => t.gain;
+					(gt.axis[0] + 1.0) / 4.0 => t.gain; //left right
 					for (0 => int i; i<midiArr.size(); i++)
 					{
 						Std.mtof(midiArr[i]) => t.freq;            
@@ -476,7 +582,8 @@ public class ChuckSoundController : MonoBehaviour {
 				}
 				else if (type==4) {
 					SinOsc s => ADSR e => r;      
-					1 => s.gain;
+					//1 => s.gain;
+					(gt.axis[1] + 1.0) / 2.0 => s.gain; //front and back
 					for (0 => int i; i<midiArr.size(); i++)
 					{
 						Std.mtof(midiArr[i]) => s.freq;
@@ -488,7 +595,8 @@ public class ChuckSoundController : MonoBehaviour {
 				}
 				else if (type==3) {
 					SawOsc w => ADSR e => r;       
-					0.1 => w.gain;
+					//0.1 => w.gain;
+					((gt.axis[2] + 1.0) / 8.0) - 1.0/10.0 => w.gain;
 					for (0 => int i; i<midiArr.size(); i++)
 					{
 						Std.mtof(midiArr[i]) => w.freq;
@@ -558,12 +666,55 @@ public class ChuckSoundController : MonoBehaviour {
 		");
 
     	myBeatNotifier = gameObject.AddComponent<ChuckEventListener>();
-        myBeatNotifier.ListenForEvent(myChuck, "beatNotifier", DisplayBeat);
+        myBeatNotifier.ListenForEvent(myChuck, "beatNotifier", SetBeatFlag);
+
+        myCountdownNotifier = gameObject.AddComponent<ChuckEventListener>();
+        myCountdownNotifier.ListenForEvent(myChuck, "countdownNotifier", SetCountdownFlag);
+
+        myRecordNotifier = gameObject.AddComponent<ChuckEventListener>();
+        myRecordNotifier.ListenForEvent(myChuck, "recordNotifier", SetRecordFlag);
+
+        myRecordOffNotifier = gameObject.AddComponent<ChuckEventListener>();
+        myRecordOffNotifier.ListenForEvent(myChuck, "recordOffNotifier", ResetRecordFlag);
+
+        mySnareNotifier = gameObject.AddComponent<ChuckEventListener>();
+        mySnareNotifier.ListenForEvent(myChuck, "snareNotifier", SetSnareHitFlag);
+
+        myKickNotifier = gameObject.AddComponent<ChuckEventListener>();
+        myKickNotifier.ListenForEvent(myChuck, "kickNotifier", SetKickHitFlag);
 
     }
 
-    void DisplayBeat()
+    void SetBeatFlag()
     {
 		main.beatFlag = true;
+    }
+
+    void SetCountdownFlag()
+    {
+		main.countdownFlag = true;
+		main.recordFlag = false;
+    }
+
+    void SetRecordFlag()
+    {
+		main.recordFlag = true;
+		main.countdownFlag = false;
+    }
+
+    void ResetRecordFlag()
+	{
+        main.recordFlag = false;
+        main.countdownFlag = false;
+    }
+
+    void SetKickHitFlag()
+    {
+
+    }
+
+    void SetSnareHitFlag()
+    {
+
     }
 }

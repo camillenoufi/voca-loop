@@ -122,8 +122,7 @@ public class dotControl : MonoBehaviour {
             return A * Mathf.Sin(angle);
         else 
             return A * Mathf.Cos(angle);
-        
-        
+
     }
 
     float IncrementTri(float x)

@@ -15,7 +15,7 @@
 // *********************************************************************************
 
 // constant (input) temporal values driving quantization
-80 => float BEATS_PER_MIN; //tempo
+100 => float BEATS_PER_MIN; //tempo
 8 => float BEATS_PER_MEAS; //meter x/4
 4 => float DIVS_PER_BEAT; //4 - 16th note quant, 2 - 8th note quant, etc...
 60 => float SEC_PER_MIN;
@@ -224,17 +224,17 @@ fun void execute(int type)
 
 //synths
 spork ~ execute(2);
-(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
+(3*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
 spork ~ execute(2);
-(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
+(3*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
 spork ~ execute(1);
-(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
+(3*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
 spork ~ execute(1);
-(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
+(3*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
 spork ~ execute(3);
-(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
+(3*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
 spork ~ execute(3);
-(4*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
+(3*BEATS_PER_MEAS*DIVS_PER_BEAT*divDur)::second => now;
 
 //drums
 spork ~ execute(4);
@@ -512,8 +512,7 @@ fun void playSynthesizedMeasure(int type, int midiArr[])
     else if (type==3) {
         SawOsc w => ADSR e => r;       
         0.1 => w.gain;
-        ((gt.axis[2] + 1.0) / 8.0) - 1.0/16.0 => w.gain;
-        <<<(gt.axis[2] + 1.0) / 8.0>>>;
+        ((gt.axis[2] + 1.0) / 8.0) - 1.0/10.0 => w.gain;
         for (0 => int i; i<midiArr.size(); i++)
         {
             Std.mtof(midiArr[i]) => w.freq;

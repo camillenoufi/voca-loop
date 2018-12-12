@@ -29,8 +29,14 @@ public class adcSelect : MonoBehaviour
 
     void DisplayBeat()
     {
+        // set text
         beatText.text = main.currentBeat.ToString();
-        beatText.color = (GameObject.Find(main.currentInstrument)).GetComponent<SpriteRenderer>().material.color;
+        // set color
+        if (main.recordFlag)
+            beatText.color = (GameObject.Find(main.currentInstrument)).GetComponent<SpriteRenderer>().color;
+        else
+            beatText.color = new Color(255,255,255);
+        // turn off after delay
         StartCoroutine(BeatOffDelay(main.currentTempo));
         main.beatFlag = false;
     }
@@ -58,7 +64,7 @@ public class adcSelect : MonoBehaviour
 
     private IEnumerator SyncLoopWithMetronome()
     {
-        yield return new WaitUntil(() => ChuckSoundController.globalBeatFlag == true);
+        yield return new WaitUntil(() => main.recordFlag == true); //ChuckSoundController.globalBeatFlag == true &&
         InstantiateLoopDot(main.currentInstrument);
 
     }

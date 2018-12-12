@@ -16,21 +16,13 @@ public class main : MonoBehaviour {
     public static string currentInstrument = "";
     public static float currentTempo = 80.0f;
     public static int currentBeat = 0, currentMeter = 8;
-    public static bool beatFlag = false, adcFlag = false;
-
-    public static bool sineFlag = false, sawFlag = false, triFlag = false;
+    public static bool beatFlag = false, adcFlag = false, countdownFlag = false, recordFlag = false;
+    public static bool sineFlag = false, sawFlag = false, triFlag = false, kickFlag = false, snareFlag = false;
     public static Dictionary<string,int> instrumentDict = new Dictionary<string, int>();
     public static float xL = -50f;
     public static float xR = 50f;
     public static float yT = 25f;
     public static float yB = -25f;
-
-    //PRIVATE VARIABLES
-	
-
-    // Chuck stuff
-    
-
 
 
     // Use this for initialization

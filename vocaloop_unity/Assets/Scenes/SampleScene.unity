@@ -636,7 +636,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -353.3, y: -160.7}
+  m_AnchoredPosition: {x: -604.6, y: -267.9}
   m_SizeDelta: {x: 50, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &275207159
@@ -1096,7 +1096,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4ebd44c97c4e04328abf7e75de2c77cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  microphoneIdentifier: 
+  microphoneIdentifier: Saffire
 --- !u!82 &780443206
 AudioSource:
   m_ObjectHideFlags: 0
