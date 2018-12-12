@@ -60,12 +60,13 @@ public class adcSelect : MonoBehaviour
         {
             Debug.Log("adc for drums");
         }
+
     }
 
     private IEnumerator SyncLoopWithMetronome()
     {
         yield return new WaitUntil(() => main.recordFlag == true); //ChuckSoundController.globalBeatFlag == true &&
-        InstantiateLoopDot(main.currentInstrument);
+        InstantiateLoopDot(main.currentInstrument); 
 
     }
 

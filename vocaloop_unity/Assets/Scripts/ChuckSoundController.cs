@@ -710,11 +710,11 @@ public class ChuckSoundController : MonoBehaviour {
 
     void SetKickHitFlag()
     {
-
+		main.kickFlag = true;
     }
 
     void SetSnareHitFlag()
     {
-
+		main.snareFlag = false;
     }
 }

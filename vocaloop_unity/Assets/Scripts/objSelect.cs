@@ -35,7 +35,6 @@ public class objSelect : MonoBehaviour {
 	{
         Component halo = gameObject.GetComponent("Halo");
         halo.GetType().GetProperty("enabled").SetValue(halo, state, null);
-        if (state) {}
 	}
 
     public void SetExternalHaloRender(GameObject gameObject, bool state)
