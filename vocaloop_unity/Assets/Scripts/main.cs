@@ -19,10 +19,10 @@ public class main : MonoBehaviour {
     public static bool beatFlag = false, adcFlag = false, countdownFlag = false, recordFlag = false;
     public static bool sineFlag = false, sawFlag = false, triFlag = false, kickFlag = false, snareFlag = false;
     public static Dictionary<string,int> instrumentDict = new Dictionary<string, int>();
-    public static float xL = -50f;
-    public static float xR = 50f;
+    public static float xL = -45f;
+    public static float xR = 45f;
     public static float yT = 20f;
-    public static float yB = -20f;
+    public static float yB = -10f;
 
 
     // Use this for initialization
