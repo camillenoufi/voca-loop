@@ -30,8 +30,8 @@ public class dotControl : MonoBehaviour {
         Gradient gradient = new Gradient();
         thisColor = gameObject.GetComponent<SpriteRenderer>().color;
         gradient.SetKeys(
-            new GradientColorKey[] { new GradientColorKey(thisColor, 0.0f), new GradientColorKey(Color.white, 1.0f) },
-            new GradientAlphaKey[] { new GradientAlphaKey(alpha, 0.0f), new GradientAlphaKey(alpha, 1.0f) }
+            new GradientColorKey[] {  new GradientColorKey(Color.white, 0.0f), new GradientColorKey(thisColor, 1.0f) },
+            new GradientAlphaKey[] { new GradientAlphaKey(alpha, 1.0f), new GradientAlphaKey(alpha, 0.0f) }
             );
         tr.colorGradient = gradient;
     }
