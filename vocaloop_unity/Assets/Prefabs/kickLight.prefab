@@ -20,7 +20,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4846814611541844}
   - component: {fileID: 122536728130175012}
-  - component: {fileID: 114156732279249326}
+  - component: {fileID: 114045577701367360}
   m_Layer: 0
   m_Name: kickLight
   m_TagString: Untagged
@@ -41,7 +41,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &114156732279249326
+--- !u!114 &114045577701367360
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -49,7 +49,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1270274446155428}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b48e77537566149418c322c32774531b, type: 3}
+  m_Script: {fileID: 11500000, guid: 7afc734445ca6442a9dc7a494f2ebdc7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!122 &122536728130175012
@@ -61,5 +61,5 @@ Halo:
   m_Enabled: 1
   m_Color:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4292673023
   m_Size: 7
