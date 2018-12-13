@@ -62,7 +62,7 @@ public class main : MonoBehaviour {
         Debug.Log("instantiating drums");
         float xpos = Random.Range(xL, xR);
         float ypos = Random.Range(yB, yT);
-        Vector3 position = new Vector3(xpos, ypos, 1);
+        Vector3 position = new Vector3(xpos, ypos, 2);
         Instantiate(drumPrefab, position, Quaternion.identity);
     }
     

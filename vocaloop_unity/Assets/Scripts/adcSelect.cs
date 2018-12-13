@@ -72,7 +72,8 @@ public class adcSelect : MonoBehaviour
 
     void InstantiateLoopDot(string objectTag)
     {
-        Vector3 position = new Vector3(main.xL, Random.Range(main.yB + 10, main.yT - 5), 1);
+        float ypos = Mathf.Round(Random.Range(main.yB + 5, main.yT - 5));
+        Vector3 position = new Vector3(main.xL, ypos, 1);
         loopDot.tag = objectTag;
         loopDot.GetComponent<SpriteRenderer>().color = (GameObject.Find(main.currentInstrument)).GetComponent<SpriteRenderer>().color;
         Instantiate(loopDot, position, Quaternion.identity);
