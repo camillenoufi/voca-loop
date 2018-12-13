@@ -14,7 +14,7 @@ public class main : MonoBehaviour {
 
     // PUBLIC VARIABLES FOR OTHER CLASSES TO ACCESS
     public static string currentInstrument = "";
-    public static float currentTempo = 80.0f;
+    public static float currentTempo = 100.0f;
     public static int currentBeat = 0, currentMeter = 8;
     public static bool beatFlag = false, adcFlag = false, countdownFlag = false, recordFlag = false;
     public static bool sineFlag = false, sawFlag = false, triFlag = false, kickFlag = false, snareFlag = false;

@@ -67,7 +67,7 @@ public class ChuckSoundController : MonoBehaviour {
         // instantiate Chuck Pitch Tracking code
         myChuckTempo.RunCode(@"
 
-			80 => global float BEATS_PER_MIN;
+			100 => global float BEATS_PER_MIN;
 			global Event mtrNotifier;
 			while(true) 
 			{
@@ -113,7 +113,7 @@ public class ChuckSoundController : MonoBehaviour {
 
 			// constant (input) temporal values driving quantization
 			global Event beatNotifier, countdownNotifier, recordNotifier, recordOffNotifier, kickNotifier, snareNotifier;
-			80 => global float BEATS_PER_MIN; //tempo
+			100 => global float BEATS_PER_MIN; //tempo
 			8 => global float BEATS_PER_MEAS; //meter x/4
 			4 => float DIVS_PER_BEAT; //4 - 16th note quant, 2 - 8th note quant, etc...
 
@@ -343,6 +343,7 @@ public class ChuckSoundController : MonoBehaviour {
 				for (0 => int i; i < BEATS_PER_MEAS; i++)
 				{
 					beatNotifier.broadcast();
+					spork ~ playClick();
 					<<< (i + 1) >>>;
 					(DIVS_PER_BEAT * divDur)::second => now;
 				}
@@ -661,10 +662,19 @@ public class ChuckSoundController : MonoBehaviour {
 			{
 				if (i % DIVS_PER_BEAT == 0) 
 				{
+					spork ~ playClick();
 					beatNotifier.broadcast();
 					<<< ""recording beat:"", (i / DIVS_PER_BEAT + 1)$int >>>;
 				}
 			}
+
+			fun void playClick() 
+			{
+				0 => snare.pos;
+				.5 => snare.gain;
+				1.5 => snare.rate;
+			}
+
 		");
 
     	myBeatNotifier = gameObject.AddComponent<ChuckEventListener>();
