@@ -84,6 +84,8 @@
      <Compile Include="Assets\Chunity\Scripts\Utility\TheChuck.cs" />
      <Compile Include="Assets\Scripts\adcSelect.cs" />
      <Compile Include="Assets\Scripts\ChuckSoundController.cs" />
+     <Compile Include="Assets\Scripts\DisplayKick.cs" />
+     <Compile Include="Assets\Scripts\DisplaySnare.cs" />
      <Compile Include="Assets\Scripts\dotControl.cs" />
      <Compile Include="Assets\Scripts\main.cs" />
      <Compile Include="Assets\Scripts\objSelect.cs" />

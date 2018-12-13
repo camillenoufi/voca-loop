@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class main : MonoBehaviour {
 
     // PUBLIC EDITABLE VARIABLES (in unity editor)
-    public Transform chuckSound;
+    public Transform chuckSound, kickLight, snareLight;
     public Text bpm; 
 
     //PUBLIC SCRIPTS
@@ -21,8 +21,8 @@ public class main : MonoBehaviour {
     public static Dictionary<string,int> instrumentDict = new Dictionary<string, int>();
     public static float xL = -50f;
     public static float xR = 50f;
-    public static float yT = 25f;
-    public static float yB = -25f;
+    public static float yT = 20f;
+    public static float yB = -20f;
 
 
     // Use this for initialization
@@ -43,9 +43,27 @@ public class main : MonoBehaviour {
 	{
         bpm.text = currentTempo.ToString() + " BPM";
 
+        if (kickFlag) 
+        {
+            InstantiateDrumObject(kickLight);
+            kickFlag = false;
+        }
+
+        if (snareFlag)
+        {
+            InstantiateDrumObject(snareLight);
+            snareFlag = false;
+        }
+
 	}
 
-
-    // ChucK pitch tracking script contained here
+    void InstantiateDrumObject(Transform drumPrefab)
+    {
+        Debug.Log("instantiating drums");
+        float xpos = Random.Range(xL, xR);
+        float ypos = Random.Range(yB, yT);
+        Vector3 position = new Vector3(xpos, ypos, 1);
+        Instantiate(drumPrefab, position, Quaternion.identity);
+    }
     
 }

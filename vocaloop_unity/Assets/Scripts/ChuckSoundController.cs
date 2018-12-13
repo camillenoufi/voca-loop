@@ -612,6 +612,7 @@ public class ChuckSoundController : MonoBehaviour {
 					{
 						if(midiArr[i]>10) 
 						{
+							kickNotifier.broadcast();
 							0 => kick.pos;
 							1 => kick.gain;
 							1 => kick.rate;
@@ -624,8 +625,9 @@ public class ChuckSoundController : MonoBehaviour {
 					{
 						if(midiArr[i]>10) 
 						{
+							snareNotifier.broadcast();
 							0 => snare.pos;
-							0.8 => snare.gain;
+							1 => snare.gain;
 							1 => snare.rate;
 						}
 						T => now;
@@ -715,6 +717,6 @@ public class ChuckSoundController : MonoBehaviour {
 
     void SetSnareHitFlag()
     {
-		main.snareFlag = false;
+		main.snareFlag = true;
     }
 }

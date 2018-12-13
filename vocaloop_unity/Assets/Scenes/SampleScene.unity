@@ -173,6 +173,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   chuckSound: {fileID: 4560729991539174, guid: 3aa7c6310c5424560a54b8b654b42c9b, type: 2}
+  kickLight: {fileID: 4846814611541844, guid: 01843fb6c5d484db2bd8e8b8f525d57d, type: 2}
+  snareLight: {fileID: 4680945307828528, guid: 443e6bc8406d1421d95adebdf6309f67, type: 2}
   bpm: {fileID: 275207159}
 --- !u!4 &85833725
 Transform:
@@ -678,52 +680,6 @@ CanvasRenderer:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 275207157}
   m_CullTransparentMesh: 0
---- !u!1001 &360549987
-Prefab:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 4846814611541844, guid: 01843fb6c5d484db2bd8e8b8f525d57d, type: 2}
-      propertyPath: m_LocalPosition.x
-      value: 46.4
-      objectReference: {fileID: 0}
-    - target: {fileID: 4846814611541844, guid: 01843fb6c5d484db2bd8e8b8f525d57d, type: 2}
-      propertyPath: m_LocalPosition.y
-      value: 3.7
-      objectReference: {fileID: 0}
-    - target: {fileID: 4846814611541844, guid: 01843fb6c5d484db2bd8e8b8f525d57d, type: 2}
-      propertyPath: m_LocalPosition.z
-      value: 2.98
-      objectReference: {fileID: 0}
-    - target: {fileID: 4846814611541844, guid: 01843fb6c5d484db2bd8e8b8f525d57d, type: 2}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4846814611541844, guid: 01843fb6c5d484db2bd8e8b8f525d57d, type: 2}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4846814611541844, guid: 01843fb6c5d484db2bd8e8b8f525d57d, type: 2}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4846814611541844, guid: 01843fb6c5d484db2bd8e8b8f525d57d, type: 2}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4846814611541844, guid: 01843fb6c5d484db2bd8e8b8f525d57d, type: 2}
-      propertyPath: m_RootOrder
-      value: 8
-      objectReference: {fileID: 0}
-    - target: {fileID: 1270274446155428, guid: 01843fb6c5d484db2bd8e8b8f525d57d, type: 2}
-      propertyPath: m_Name
-      value: snareLight
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 01843fb6c5d484db2bd8e8b8f525d57d, type: 2}
-  m_IsPrefabAsset: 0
 --- !u!1 &439218260
 GameObject:
   m_ObjectHideFlags: 0
@@ -849,53 +805,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!1001 &501980742
-Prefab:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 4846814611541844, guid: 01843fb6c5d484db2bd8e8b8f525d57d, type: 2}
-      propertyPath: m_LocalPosition.x
-      value: 46.4
-      objectReference: {fileID: 0}
-    - target: {fileID: 4846814611541844, guid: 01843fb6c5d484db2bd8e8b8f525d57d, type: 2}
-      propertyPath: m_LocalPosition.y
-      value: 19.9
-      objectReference: {fileID: 0}
-    - target: {fileID: 4846814611541844, guid: 01843fb6c5d484db2bd8e8b8f525d57d, type: 2}
-      propertyPath: m_LocalPosition.z
-      value: 2.99
-      objectReference: {fileID: 0}
-    - target: {fileID: 4846814611541844, guid: 01843fb6c5d484db2bd8e8b8f525d57d, type: 2}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4846814611541844, guid: 01843fb6c5d484db2bd8e8b8f525d57d, type: 2}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4846814611541844, guid: 01843fb6c5d484db2bd8e8b8f525d57d, type: 2}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4846814611541844, guid: 01843fb6c5d484db2bd8e8b8f525d57d, type: 2}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4846814611541844, guid: 01843fb6c5d484db2bd8e8b8f525d57d, type: 2}
-      propertyPath: m_RootOrder
-      value: 7
-      objectReference: {fileID: 0}
-    - target: {fileID: 108955221973214268, guid: 01843fb6c5d484db2bd8e8b8f525d57d,
-        type: 2}
-      propertyPath: m_Intensity
-      value: 5
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 01843fb6c5d484db2bd8e8b8f525d57d, type: 2}
-  m_IsPrefabAsset: 0
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
